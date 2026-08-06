@@ -1,7 +1,6 @@
-/* Premium Stocks: a personal, unscreened watchlist. Whatever the user adds
-   here is just shown with real Twelve Data numbers — no trend filtering,
-   no scoring. Symbols and their data persist across reloads (marketData.js
-   owns the actual fetching/caching; this file is just the page controller). */
+/* Premium Stocks: a personal, unscreened watchlist. Static, hand-picked list
+   (marketData.js), no add/remove — just real numbers for a fixed set of
+   symbols, no trend filtering, no scoring. */
 (function(){
   "use strict";
   const market = window.SwingAI.market;
@@ -56,13 +55,13 @@
     render();
   }
 
-  function renderHead(){
+  function renderHead(list){
     const row = document.getElementById("premiumTableHead");
     const symHead = `
       <th class="col-sym">
         <span class="col-sym-text">
           <span class="col-sym-label">Symbol</span>
-          <span class="col-sym-count mono">Watching ${market.getWatchlistSymbols().length}</span>
+          <span class="col-sym-count mono">Watching ${list.length}</span>
         </span>
       </th>`;
     const cells = [symHead].concat(COLUMNS.map(col => {
@@ -70,7 +69,7 @@
       const arrow = active ? `<span class="sort-arrow">${state.sortDir === -1 ? "↓" : "↑"}</span>` : "";
       const subLabel = col.sub ? `<small>${col.sub}</small>` : "";
       return `<th class="${active ? "active" : ""}" data-col="${col.key}">${arrow}<span>${col.label}</span>${subLabel}</th>`;
-    })).concat(['<th class="col-remove"></th>']);
+    }));
     row.innerHTML = cells.join("");
     row.querySelectorAll("th[data-col]").forEach(th => {
       th.addEventListener("click", () => sortBy(th.dataset.col));
@@ -78,11 +77,9 @@
   }
 
   function sortedList(list){
-    const loaded = list.filter(r => !r.loading && !r.error);
-    const pending = list.filter(r => r.loading || r.error);
-    if(!state.sortKey) return loaded.concat(pending);
+    if(!state.sortKey) return list;
     const col = COLUMNS.find(c => c.key === state.sortKey);
-    loaded.sort((a, b) => {
+    return [...list].sort((a, b) => {
       const av = col.get(a), bv = col.get(b);
       if(av == null && bv == null) return 0;
       if(av == null) return 1;
@@ -90,7 +87,6 @@
       if(typeof av === "string") return av.localeCompare(bv) * state.sortDir * -1;
       return (av - bv) * state.sortDir;
     });
-    return loaded.concat(pending);
   }
 
   function avatarHue(symbol){
@@ -102,7 +98,7 @@
   function renderBody(list){
     const body = document.getElementById("premiumTableBody");
     if(!list.length){
-      body.innerHTML = `<tr><td colspan="${COLUMNS.length + 2}"><div class="empty-state">No stocks yet. Add a ticker above to start tracking it.</div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="${COLUMNS.length + 1}"><div class="empty-state">No stocks yet.</div></td></tr>`;
       return;
     }
     body.innerHTML = sortedList(list).map((r, i) => {
@@ -111,24 +107,12 @@
         <td class="col-sym">
           <span class="list-avatar" style="background:hsl(${hue} 38% 40%)">${r.symbol.charAt(0)}</span>
           <span class="list-sym-badge mono">${r.symbol}</span>
-          ${r.loading ? '<span class="list-name">Loading&hellip;</span>' : ""}
-          ${r.error ? `<span class="list-name down">${r.error}</span>` : ""}
+          <span class="list-name" title="${r.name}">${r.name}</span>
         </td>`;
-      const removeCell = `<td class="col-remove"><button type="button" class="remove-btn" data-symbol="${r.symbol}" aria-label="Remove ${r.symbol}">&times;</button></td>`;
-      if(r.loading || r.error){
-        return `<tr style="--i:${i}" data-symbol="${r.symbol}">${idCell}<td colspan="${COLUMNS.length}"></td>${removeCell}</tr>`;
-      }
       const cells = COLUMNS.map(col => renderValue(col, col.get(r))).join("");
-      return `<tr style="--i:${i}" data-symbol="${r.symbol}" title="Open ${r.symbol} chart on TradingView">${idCell}${cells}${removeCell}</tr>`;
+      return `<tr style="--i:${i}" data-symbol="${r.symbol}" title="Open ${r.symbol} chart on TradingView">${idCell}${cells}</tr>`;
     }).join("");
 
-    body.querySelectorAll(".remove-btn").forEach(btn => {
-      btn.addEventListener("click", e => {
-        e.stopPropagation();
-        market.removeWatchlistSymbol(btn.dataset.symbol);
-        render();
-      });
-    });
     body.querySelectorAll("tr[data-symbol]").forEach(tr => {
       tr.addEventListener("click", () => {
         window.open(`https://www.tradingview.com/chart/?symbol=${tr.dataset.symbol}`, "_blank", "noopener");
@@ -136,61 +120,17 @@
     });
   }
 
-  function setBanner(text, isError){
-    const el = document.getElementById("statusBanner");
-    if(!text){ el.hidden = true; return; }
-    el.hidden = false;
-    el.textContent = text;
-    el.className = "status-banner" + (isError ? " error" : "");
-  }
-
   function render(){
-    renderHead();
-    renderBody(market.getWatchlistStocks());
+    const list = market.getWatchlistStocks();
+    renderHead(list);
+    renderBody(list);
   }
 
-  function showAddError(msg){
-    const el = document.getElementById("addTickerError");
-    if(!msg){ el.hidden = true; return; }
-    el.hidden = false;
-    el.textContent = msg;
-  }
-
-  async function initPremiumPage(){
+  function initPremiumPage(){
     const table = document.getElementById("premiumTableBody");
     if(!table) return;
-
-    setBanner("Loading real market data from Twelve Data...", false);
-    await market.ready;
-
-    const status = market.getStatus();
-    if(status.error){
-      setBanner("Couldn't load real market data: " + status.error, true);
-      return;
-    }
-
-    setBanner(null);
     document.getElementById("tableWrap").hidden = false;
     render();
-    market.onUpdate(() => render());
-
-    const form = document.getElementById("addTickerForm");
-    const input = document.getElementById("addTickerInput");
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      const value = input.value;
-      if(!value.trim()) return;
-      showAddError(null);
-      const btn = form.querySelector(".add-ticker-btn");
-      btn.disabled = true;
-      const result = await market.addWatchlistSymbol(value);
-      btn.disabled = false;
-      if(result.ok){
-        input.value = "";
-      } else {
-        showAddError(result.error || "Couldn't add that symbol.");
-      }
-    });
   }
 
   document.addEventListener("DOMContentLoaded", initPremiumPage);

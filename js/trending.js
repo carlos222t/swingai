@@ -9,8 +9,8 @@
   "use strict";
   const market = window.SwingAI.market;
 
-  const PAGE_SUB = "One combined screen: the 21 EMA sitting within 3% of price, either side.";
-  const CRITERIA = "21 EMA is 0&ndash;3% above price (Momentum) or 0&ndash;3% below price (Pullback) &middot; price at least $10.";
+  const PAGE_SUB = "Ten hand-picked names, tagged by where price sits against the 21 EMA.";
+  const CRITERIA = "<b>Momentum</b> &mdash; 21 EMA sits just above price, still catching up. <b>Pullback</b> &mdash; price has reclaimed the 21 EMA and is resting on it as support.";
 
   // "kind" drives how the raw number is split into a value + a small muted
   // unit suffix (or colored, for the two percent-change columns).
@@ -141,40 +141,18 @@
     });
   }
 
-  function setBanner(text, isError){
-    const el = document.getElementById("statusBanner");
-    if(!text){ el.hidden = true; return; }
-    el.hidden = false;
-    el.textContent = text;
-    el.className = "status-banner" + (isError ? " error" : "");
-  }
-
   function render(){
     const list = market.getScreenedList();
     renderMeta();
     renderHead(list);
     renderBody(list);
-    document.getElementById("fundamentalsNote").hidden = !market.getStatus().fundamentalsLoading;
   }
 
-  async function initTrendingPage(){
+  function initTrendingPage(){
     const table = document.getElementById("trendTableBody");
     if(!table) return;
-
-    setBanner("Loading real market data from Twelve Data...", false);
-    await market.ready;
-
-    const status = market.getStatus();
-    if(status.error){
-      setBanner("Couldn't load real market data: " + status.error, true);
-      return;
-    }
-
-    setBanner(null);
     document.getElementById("tableWrap").hidden = false;
     render();
-
-    market.onUpdate(() => render());
   }
 
   document.addEventListener("DOMContentLoaded", initTrendingPage);

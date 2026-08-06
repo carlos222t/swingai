@@ -1,15 +1,11 @@
-/* Real market data via Twelve Data, plus the trend/momentum/pullback screener.
-   Price, EMA20/50/200, volume and daily/weekly/monthly change all come from
-   real daily candles (batched in one request per chunk of symbols).
-   Fundamentals (P/E, EPS, div yield, market cap) come from /statistics,
-   which the free plan only serves one symbol at a time, so those load in
-   the background afterward, paced to stay under the 8 requests/minute cap,
-   and the table re-renders as each one arrives. Sector is static reference
-   data (the /profile endpoint that would fetch it live is a paid-plan-only
-   feature on this key) so it isn't "real-time" the way the rest of this is.
-   Universe is trimmed to 15 liquid names on purpose: /statistics costs one
-   request per symbol with no batching, so a bigger list would eat most of
-   a day's 800-request budget on a single fundamentals pass. */
+/* Static market data: no live API calls of any kind (Twelve Data's free-tier
+   credits kept running out, and the AI-discovery proxy added its own latency
+   and moving parts). The numbers below are researched once and hardcoded —
+   they're a snapshot, not a live feed, so they won't move again until
+   someone edits this file. Trending is a fixed 10-name list; Premium is a
+   separate fixed personal watchlist. Both share the same row shape, so
+   trending.js/premium.js render them identically, and tradeAnalysis.js
+   (Upload Trade) draws from the full combined 20-name pool. */
 (function(){
   "use strict";
 
@@ -21,408 +17,153 @@
     return h;
   }
   function round2(n){ return Math.round(n * 100) / 100; }
-  function round1(n){ return Math.round(n * 10) / 10; }
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-  function chunk(arr, size){
-    const out = [];
-    for(let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-    return out;
-  }
 
-  // Twelve Data's free plan caps at 8 requests/minute, and each symbol inside
-  // a batched request counts as its own request toward that cap. 8 symbols
-  // is the most this can ask for in a single time_series call without going
-  // over the limit in one shot, so a second chunk (the AI-sourced additions
-  // below) needs a full minute's wait before it can safely go out.
-  const BASE_UNIVERSE = [
-    ["NVDA","NVIDIA Corp","Semiconductors"],
-    ["AAPL","Apple Inc","Consumer Electronics"],
-    ["MSFT","Microsoft Corp","Software"],
-    ["AMZN","Amazon.com Inc","E-commerce"],
-    ["TSLA","Tesla Inc","Automotive"],
-    ["JPM","JPMorgan Chase","Banking"],
-    ["COST","Costco Wholesale","Retail"],
-    ["XOM","Exxon Mobil","Energy"]
+  // Raw researched numbers per ticker, as of market close Aug 6, 2026. mapRow()
+  // below derives the EMA-distance fields (dist20/dist50, and the sma20/sma50
+  // aliases tradeAnalysis.js reads) from ema21Close/ema50Close so those don't
+  // have to be hand-computed here. EMA values use each source's EMA20 preset
+  // as a close proxy for EMA21 (no source offers an exact 21-day preset).
+  const RAW_TRENDING = [
+    { symbol: "NVDA", name: "NVIDIA Corporation", sector: "Semiconductors",
+      price: 218.99, dailyChangePct: -0.10, volume: 114304204, relVol: 0.89,
+      marketCap: 5300000000000, peRatio: 33.57, epsDilTTM: 6.53, epsDilGrowthYoY: 110.60,
+      divYieldPct: 0.46, setup: "Pullback",
+      ema21Close: 216.20, ema50Close: 210.63, weeklyChangePct: 12.17, monthlyChangePct: 7.18 },
+    { symbol: "TSLA", name: "Tesla, Inc.", sector: "Automotive",
+      price: 319.53, dailyChangePct: -0.63, volume: 26086919, relVol: 0.67,
+      marketCap: 1260000000000, peRatio: 295.99, epsDilTTM: 1.08, epsDilGrowthYoY: -35.60,
+      divYieldPct: 0, setup: "Momentum",
+      ema21Close: 320.18, ema50Close: 321.81, weeklyChangePct: 3.46, monthlyChangePct: -18.91 },
+    { symbol: "AAPL", name: "Apple Inc.", sector: "Consumer Electronics",
+      price: 312.41, dailyChangePct: 0.45, volume: 46237652, relVol: 0.84,
+      marketCap: 4560000000000, peRatio: 35.68, epsDilTTM: 8.72, epsDilGrowthYoY: 32.60,
+      divYieldPct: 0.35, setup: "Pullback",
+      ema21Close: 310.82, ema50Close: 314.60, weeklyChangePct: -6.31, monthlyChangePct: -0.31 },
+    { symbol: "MSFT", name: "Microsoft Corporation", sector: "Software",
+      price: 499.86, dailyChangePct: 2.54, volume: 36189321, relVol: 0.94,
+      marketCap: 3710000000000, peRatio: 27.16, epsDilTTM: 17.95, epsDilGrowthYoY: 31.60,
+      divYieldPct: 0.73, setup: "Pullback",
+      ema21Close: 491.05, ema50Close: 469.11, weeklyChangePct: 10.81, monthlyChangePct: 30.40 },
+    { symbol: "PLTR", name: "Palantir Technologies Inc.", sector: "Software",
+      price: 155.92, dailyChangePct: -1.58, volume: 41711184, relVol: 0.96,
+      marketCap: 374680000000, peRatio: 135.50, epsDilTTM: 1.17, epsDilGrowthYoY: 287.60,
+      divYieldPct: 0, setup: "Pullback",
+      ema21Close: 152.97, ema50Close: 143.86, weeklyChangePct: 27.53, monthlyChangePct: 17.93 },
+    { symbol: "AMZN", name: "Amazon.com, Inc.", sector: "E-commerce",
+      price: 272.26, dailyChangePct: -0.14, volume: 30645404, relVol: 0.63,
+      marketCap: 2940000000000, peRatio: 21.92, epsDilTTM: 12.44, epsDilGrowthYoY: 89.70,
+      divYieldPct: 0, setup: "Momentum",
+      ema21Close: 272.74, ema50Close: 265.71, weeklyChangePct: 15.61, monthlyChangePct: 11.76 },
+    { symbol: "META", name: "Meta Platforms, Inc.", sector: "Internet Media",
+      price: 589.90, dailyChangePct: 0.19, volume: 11798635, relVol: 0.63,
+      marketCap: 1500000000000, peRatio: 22.19, epsDilTTM: 26.54, epsDilGrowthYoY: -3.70,
+      divYieldPct: 0.36, setup: "Pullback",
+      ema21Close: 585.06, ema50Close: 586.34, weeklyChangePct: 9.44, monthlyChangePct: -2.19 },
+    { symbol: "AMD", name: "Advanced Micro Devices, Inc.", sector: "Semiconductors",
+      price: 489.28, dailyChangePct: 1.50, volume: 24627839, relVol: 0.85,
+      marketCap: 798740000000, peRatio: 124.88, epsDilTTM: 3.90, epsDilGrowthYoY: 124.80,
+      divYieldPct: 0, setup: "Momentum",
+      ema21Close: 492.50, ema50Close: 493.81, weeklyChangePct: 0.80, monthlyChangePct: -5.44 },
+    { symbol: "SOFI", name: "SoFi Technologies, Inc.", sector: "Fintech",
+      price: 18.10, dailyChangePct: -0.82, volume: 45290229, relVol: 0.54,
+      marketCap: 23350000000, peRatio: 37.89, epsDilTTM: 0.48, epsDilGrowthYoY: -2.40,
+      divYieldPct: 0, setup: "Momentum",
+      ema21Close: 18.12, ema50Close: 17.65, weeklyChangePct: 9.90, monthlyChangePct: 2.09 },
+    { symbol: "CAT", name: "Caterpillar Inc.", sector: "Industrial Machinery",
+      price: 856.96, dailyChangePct: -1.62, volume: 2853491, relVol: 0.95,
+      marketCap: 393920000000, peRatio: 36.93, epsDilTTM: 23.21, epsDilGrowthYoY: 18.00,
+      divYieldPct: 0.76, setup: "Momentum",
+      ema21Close: 867.59, ema50Close: 859.67, weeklyChangePct: 5.91, monthlyChangePct: -9.61 }
   ];
 
-  // Asks Claude, grounded with web search, for a handful of stocks currently
-  // trending with swing traders. Never called directly from the browser —
-  // Anthropic's API rejects browser origins outright — so this always goes
-  // through a server: the local swingai-server proxy in dev, or the
-  // /api/trending-stocks Vercel function once deployed. If neither is
-  // reachable, this fails silently and the universe just stays at the base 8.
-  const AI_TRENDING_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    ? "http://localhost:8787/api/trending-stocks"
-    : "/api/trending-stocks";
-  const AI_TICKERS_CACHE_KEY = "swingai_ai_tickers_cache_v1";
-  const AI_TICKERS_CACHE_TTL_MS = 60 * 60 * 1000;
+  const RAW_PREMIUM = [
+    { symbol: "INTC", name: "Intel Corporation", sector: "Semiconductors",
+      price: 99.81, dailyChangePct: -1.24, volume: 77946062, relVol: 0.68,
+      marketCap: 503440000000, peRatio: null, epsDilTTM: -2.30, epsDilGrowthYoY: null,
+      divYieldPct: 0,
+      ema21Close: 99.50, ema50Close: 97.10, weeklyChangePct: 9.53, monthlyChangePct: -9.46 },
+    { symbol: "ISRG", name: "Intuitive Surgical, Inc.", sector: "Medical Devices",
+      price: 373.71, dailyChangePct: -0.40, volume: 2594668, relVol: 0.61,
+      marketCap: 132020000000, peRatio: 42.85, epsDilTTM: 8.72, epsDilGrowthYoY: 21.60,
+      divYieldPct: 0,
+      ema21Close: 371.27, ema50Close: 365.35, weeklyChangePct: 5.88, monthlyChangePct: -9.97 },
+    { symbol: "HLT", name: "Hilton Worldwide Holdings Inc.", sector: "Hospitality",
+      price: 321.98, dailyChangePct: -0.79, volume: 948041, relVol: 0.43,
+      marketCap: 72470000000, peRatio: 47.71, epsDilTTM: 6.80, epsDilGrowthYoY: 4.40,
+      divYieldPct: 0.19,
+      ema21Close: 321.09, ema50Close: 320.33, weeklyChangePct: -0.01, monthlyChangePct: -3.35 },
+    { symbol: "FTAI", name: "FTAI Aviation Ltd.", sector: "Aviation",
+      price: 221.23, dailyChangePct: -1.12, volume: 1593465, relVol: 0.89,
+      marketCap: 22720000000, peRatio: 48.29, epsDilTTM: 4.58, epsDilGrowthYoY: 13.10,
+      divYieldPct: 0.90,
+      ema21Close: 221.93, ema50Close: 217.39, weeklyChangePct: 12.01, monthlyChangePct: 2.37 },
+    { symbol: "AGX", name: "Argan, Inc.", sector: "Engineering & Construction",
+      price: 590.87, dailyChangePct: -1.82, volume: 154882, relVol: 0.47,
+      marketCap: 8280000000, peRatio: 51.93, epsDilTTM: 11.38, epsDilGrowthYoY: 59.40,
+      divYieldPct: 0.34,
+      ema21Close: 603.54, ema50Close: 592.40, weeklyChangePct: 1.90, monthlyChangePct: -11.21 },
+    { symbol: "MY", name: "China Ming Yang Wind Power Group Limited", sector: "Wind Energy",
+      price: 2.44, dailyChangePct: 0.83, volume: null, relVol: 1.00,
+      marketCap: 386050000, peRatio: 8.41, epsDilTTM: 0.29, epsDilGrowthYoY: null,
+      divYieldPct: 0,
+      ema21Close: 2.41, ema50Close: 2.40, weeklyChangePct: 0.83, monthlyChangePct: 1.67 },
+    { symbol: "UNP", name: "Union Pacific Corporation", sector: "Railroads",
+      price: 295.38, dailyChangePct: -0.05, volume: 1719864, relVol: 0.54,
+      marketCap: 175480000000, peRatio: 23.92, epsDilTTM: 12.35, epsDilGrowthYoY: 7.30,
+      divYieldPct: 1.92,
+      ema21Close: 294.77, ema50Close: 294.51, weeklyChangePct: 2.05, monthlyChangePct: 5.14 },
+    { symbol: "MRK", name: "Merck & Co., Inc.", sector: "Pharmaceuticals",
+      price: 128.37, dailyChangePct: 0.03, volume: 7051682, relVol: 0.84,
+      marketCap: 317050000000, peRatio: 100.85, epsDilTTM: 1.27, epsDilGrowthYoY: -80.40,
+      divYieldPct: 2.65,
+      ema21Close: 128.81, ema50Close: 129.01, weeklyChangePct: -1.09, monthlyChangePct: 1.89 },
+    { symbol: "WULF", name: "TeraWulf Inc.", sector: "Bitcoin Mining",
+      price: 17.62, dailyChangePct: -2.52, volume: 20171606, relVol: 0.60,
+      marketCap: 8790000000, peRatio: null, epsDilTTM: -4.51, epsDilGrowthYoY: null,
+      divYieldPct: 0,
+      ema21Close: 18.27, ema50Close: 18.35, weeklyChangePct: -1.12, monthlyChangePct: -22.82 },
+    { symbol: "WFC", name: "Wells Fargo & Company", sector: "Banking",
+      price: 87.59, dailyChangePct: -1.77, volume: 13163482, relVol: 0.78,
+      marketCap: 264870000000, peRatio: 12.73, epsDilTTM: 6.88, epsDilGrowthYoY: 18.10,
+      divYieldPct: 2.28,
+      ema21Close: 88.13, ema50Close: 87.58, weeklyChangePct: 2.53, monthlyChangePct: 2.37 }
+  ];
 
-  async function fetchAiTickers(){
-    const cached = readCache(AI_TICKERS_CACHE_KEY, AI_TICKERS_CACHE_TTL_MS);
-    if(cached) return cached;
-    try{
-      const res = await fetch(AI_TRENDING_URL);
-      const data = await res.json();
-      const baseSymbols = new Set(BASE_UNIVERSE.map(u => u[0]));
-      const additions = (data.stocks || [])
-        .filter(s => s.symbol && !baseSymbols.has(s.symbol.toUpperCase()))
-        .slice(0, 4)
-        .map(s => [s.symbol.toUpperCase(), s.name || s.symbol, s.sector || "AI Trending"]);
-      writeCache(AI_TICKERS_CACHE_KEY, additions);
-      return additions;
-    } catch(e){
-      return []; // proxy not running or unreachable: fall back to the base universe only
-    }
+  function mapRow(raw){
+    const dist20 = round2(((raw.price - raw.ema21Close) / raw.ema21Close) * 100);
+    const dist50 = round2(((raw.price - raw.ema50Close) / raw.ema50Close) * 100);
+    return Object.assign({}, raw, {
+      sma20: raw.ema21Close, sma50: raw.ema50Close,
+      dist20, dist50
+    });
   }
 
-  const PRICE_CACHE_KEY = "swingai_price_cache_v1";
-  const PRICE_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour: daily candles don't move faster than this
-  const STATS_CACHE_KEY = "swingai_stats_cache_v1";
-  const STATS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // fundamentals move slowly, cache for a day
+  const TRENDING_STOCKS = RAW_TRENDING.map(mapRow);
+  const PREMIUM_STOCKS = RAW_PREMIUM.map(mapRow);
+  const ALL_STOCKS = TRENDING_STOCKS.concat(PREMIUM_STOCKS);
 
-  let STOCKS = [];
-  let status = { loading: true, error: null, fundamentalsLoading: false };
   const listeners = [];
-
   function onUpdate(cb){ listeners.push(cb); }
   function notify(){ listeners.forEach(cb => { try{ cb(); } catch(e){} }); }
-  function getStatus(){ return status; }
+  function getStatus(){ return { loading: false, error: null, fundamentalsLoading: false }; }
 
-  function getApiKey(){
-    return (window.SwingAI.config && window.SwingAI.config.TWELVE_DATA_KEY) || null;
-  }
-
-  function readCache(key, ttlMs){
-    try{
-      const raw = localStorage.getItem(key);
-      if(!raw) return null;
-      const parsed = JSON.parse(raw);
-      if(Date.now() - parsed.fetchedAt > ttlMs) return null;
-      return parsed.data;
-    } catch(e){ return null; }
-  }
-  function writeCache(key, data){
-    try{ localStorage.setItem(key, JSON.stringify({ fetchedAt: Date.now(), data })); }
-    catch(e){}
-  }
-
-  function computeEMA(closesOldestFirst, period){
-    if(closesOldestFirst.length < period) return null;
-    const k = 2 / (period + 1);
-    let ema = closesOldestFirst.slice(0, period).reduce((a, b) => a + b, 0) / period;
-    for(let i = period; i < closesOldestFirst.length; i++){
-      ema = closesOldestFirst[i] * k + ema * (1 - k);
-    }
-    return ema;
-  }
-
-  async function fetchJson(url){
-    const res = await fetch(url);
-    const data = await res.json();
-    if(data && data.status === "error"){
-      throw new Error(data.message || "Twelve Data returned an error.");
-    }
-    return data;
-  }
-
-  async function fetchTimeSeriesChunk(symbols, apiKey){
-    const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbols.join(","))}&interval=1day&outputsize=260&apikey=${apiKey}`;
-    const data = await fetchJson(url);
-    return symbols.length === 1 ? { [symbols[0]]: data } : data;
-  }
-
-  // Same free-tier per-minute cap applies here: on a 429, wait it out once and retry.
-  async function fetchTimeSeriesWithRetry(symbols, apiKey){
-    try{
-      return await fetchTimeSeriesChunk(symbols, apiKey);
-    } catch(e){
-      if(!/run out of api credits|rate limit/i.test(e.message || "")) throw e;
-      await sleep(65000);
-      return await fetchTimeSeriesChunk(symbols, apiKey);
-    }
-  }
-
-  function buildStockFromSeries(symbol, name, sector, series){
-    if(!series || !series.values || series.values.length < 60) return null;
-
-    const valuesNewestFirst = series.values;
-    const closesNewestFirst = valuesNewestFirst.map(v => parseFloat(v.close));
-    const volumesNewestFirst = valuesNewestFirst.map(v => parseFloat(v.volume));
-    const closesOldestFirst = [...closesNewestFirst].reverse();
-
-    const price = closesNewestFirst[0];
-    const ema20 = computeEMA(closesOldestFirst, 20);
-    const ema50 = computeEMA(closesOldestFirst, 50);
-    const ema200 = closesOldestFirst.length >= 200 ? computeEMA(closesOldestFirst, 200) : null;
-    if(ema20 == null || ema50 == null || ema200 == null) return null;
-
-    const dist20 = ((price - ema20) / ema20) * 100;
-    const dist50 = ((price - ema50) / ema50) * 100;
-    const dist200 = ((price - ema200) / ema200) * 100;
-
-    const dailyChangePct = closesNewestFirst.length > 1 ? ((price - closesNewestFirst[1]) / closesNewestFirst[1]) * 100 : 0;
-    const weeklyChangePct = closesNewestFirst.length > 5 ? ((price - closesNewestFirst[5]) / closesNewestFirst[5]) * 100 : 0;
-    const monthlyChangePct = closesNewestFirst.length > 21 ? ((price - closesNewestFirst[21]) / closesNewestFirst[21]) * 100 : 0;
-
-    const volume = volumesNewestFirst[0];
-    const last20Vol = volumesNewestFirst.slice(0, 20);
-    const avgVolume = last20Vol.reduce((a, b) => a + b, 0) / last20Vol.length;
-    const relVol = avgVolume ? volume / avgVolume : 1;
-
-    return {
-      symbol, name, sector,
-      price: round2(price), sma20: round2(ema20), sma50: round2(ema50), sma200: round2(ema200),
-      dist20, dist50, dist200,
-      dailyChangePct: round2(dailyChangePct), weeklyChangePct: round2(weeklyChangePct), monthlyChangePct: round2(monthlyChangePct),
-      volume: Math.round(volume), avgVolume: Math.round(avgVolume), relVol: round2(relVol),
-      marketCap: null, peRatio: null, epsDilTTM: null, epsDilGrowthYoY: null, divYieldPct: null
-    };
-  }
-
-  async function fetchStatisticsFor(symbol, apiKey){
-    try{
-      const data = await fetchJson(`https://api.twelvedata.com/statistics?symbol=${symbol}&apikey=${apiKey}`);
-      const stats = data.statistics;
-      if(!stats) return null;
-      const val = stats.valuations_metrics || {};
-      const income = (stats.financials && stats.financials.income_statement) || {};
-      const divs = stats.dividends_and_splits || {};
-      return {
-        marketCap: typeof val.market_capitalization === "number" ? val.market_capitalization : null,
-        peRatio: typeof val.trailing_pe === "number" ? round1(val.trailing_pe) : null,
-        epsDilTTM: typeof income.diluted_eps_ttm === "number" ? round2(income.diluted_eps_ttm) : null,
-        epsDilGrowthYoY: typeof income.quarterly_earnings_growth_yoy === "number" ? round1(income.quarterly_earnings_growth_yoy * 100) : null,
-        divYieldPct: typeof divs.trailing_annual_dividend_yield === "number" ? round2(divs.trailing_annual_dividend_yield * 100) : 0
-      };
-    } catch(e){
-      return null;
-    }
-  }
-
-  async function fillFundamentals(apiKey){
-    status.fundamentalsLoading = true;
-    notify();
-    const statsCache = readCache(STATS_CACHE_KEY, STATS_CACHE_TTL_MS) || {};
-    let dirty = false;
-    for(const stock of STOCKS){
-      if(statsCache[stock.symbol]){
-        Object.assign(stock, statsCache[stock.symbol]);
-        notify();
-        continue;
-      }
-      const stats = await fetchStatisticsFor(stock.symbol, apiKey);
-      if(stats){
-        Object.assign(stock, stats);
-        statsCache[stock.symbol] = stats;
-        dirty = true;
-      }
-      notify();
-      await sleep(8000); // /statistics is 1 request per symbol with no batching; stay well under 8/min
-    }
-    if(dirty) writeCache(STATS_CACHE_KEY, statsCache);
-    status.fundamentalsLoading = false;
-    notify();
-  }
-
-  async function loadMarketData(){
-    const apiKey = getApiKey();
-    if(!apiKey){
-      status = { loading: false, error: "No Twelve Data API key configured (js/config.js).", fundamentalsLoading: false };
-      notify();
-      return;
-    }
-
-    const cached = readCache(PRICE_CACHE_KEY, PRICE_CACHE_TTL_MS);
-    if(cached && cached.length){
-      STOCKS = cached;
-      status = { loading: false, error: null, fundamentalsLoading: false };
-      notify();
-      fillFundamentals(apiKey);
-      return;
-    }
-
-    try{
-      const aiTickers = await fetchAiTickers();
-      const universe = BASE_UNIVERSE.concat(aiTickers);
-      const chunks = chunk(universe.map(u => u[0]), 8);
-
-      const results = {};
-      for(let i = 0; i < chunks.length; i++){
-        const chunkResults = await fetchTimeSeriesWithRetry(chunks[i], apiKey);
-        Object.assign(results, chunkResults);
-        if(i < chunks.length - 1) await sleep(65000); // next chunk needs a fresh per-minute window too
-      }
-
-      const stocks = universe
-        .map(([symbol, name, sector]) => buildStockFromSeries(symbol, name, sector, results[symbol]))
-        .filter(Boolean);
-
-      if(!stocks.length){
-        throw new Error("Twelve Data didn't return usable price history for any symbol.");
-      }
-
-      STOCKS = stocks;
-      writeCache(PRICE_CACHE_KEY, STOCKS);
-      status = { loading: false, error: null, fundamentalsLoading: false };
-      notify();
-      await sleep(60000); // the price fetch just spent the whole per-minute budget; give it a full cycle to reset
-      fillFundamentals(apiKey);
-    } catch(e){
-      status = { loading: false, error: e.message || "Couldn't load real market data.", fundamentalsLoading: false };
-      notify();
-    }
-  }
-
-  // ---------- Screener ----------
-  // One combined Trending list: a stock qualifies if the 21 EMA sits 0-3%
-  // above price (still setting up, "Momentum") OR 0-3% below price (already
-  // reclaimed, testing it as support, "Pullback"). dist20 is "price is X%
-  // above the 20 EMA", so those are a small negative or small positive
-  // dist20 respectively; a stock can only ever match one side.
-  function baseQualityFilters(s){
-    return { priceOk: s.price >= 10 };
-  }
-  function baseQualityPass(f){ return f.priceOk; }
-
-  function buildRow(s){
-    const bq = baseQualityFilters(s);
-    const emaAbovePrice = s.dist20 <= 0 && s.dist20 >= -3;
-    const emaBelowPrice = s.dist20 >= 0 && s.dist20 <= 3;
-    const setup = emaAbovePrice ? "Momentum" : emaBelowPrice ? "Pullback" : null;
-    const qualifies = baseQualityPass(bq) && setup !== null;
-
-    const score = 3 - Math.abs(s.dist20); // closest to the 21 EMA ranks first
-
-    return Object.assign({}, s, { bq, setup, qualifies, score });
-  }
-
-  function getScreenedList(){
-    return STOCKS
-      .map(s => buildRow(s))
-      .filter(r => r.qualifies)
-      .sort((a, b) => b.score - a.score);
-  }
-
-  function getUniverseSize(){ return STOCKS.length; }
+  function getScreenedList(){ return TRENDING_STOCKS; }
+  function getUniverseSize(){ return TRENDING_STOCKS.length; }
 
   function pickStock(seed){
-    if(!STOCKS.length) return null;
-    const idx = Math.abs(hashCode(seed)) % STOCKS.length;
-    return STOCKS[idx];
+    if(!ALL_STOCKS.length) return null;
+    const idx = Math.abs(hashCode(seed)) % ALL_STOCKS.length;
+    return ALL_STOCKS[idx];
   }
 
-  // ---------- Premium Stocks: a personal, unscreened watchlist ----------
-  // Whatever the user adds here is just shown, real Twelve Data numbers, no
-  // trend/momentum/pullback filtering. Symbols persist across reloads; price
-  // data for each is cached individually so re-adding a previously-tracked
-  // symbol is instant.
-  const WATCHLIST_KEY = "swingai_watchlist_v1";
-  const WATCHLIST_DATA_CACHE_KEY = "swingai_watchlist_data_v1";
+  function getWatchlistSymbols(){ return PREMIUM_STOCKS.map(s => s.symbol); }
+  function getWatchlistStocks(){ return PREMIUM_STOCKS; }
 
-  let watchlistSymbols = [];
-  try{ watchlistSymbols = JSON.parse(localStorage.getItem(WATCHLIST_KEY) || "[]"); } catch(e){}
-  const watchlistStocks = {}; // symbol -> stock row (buildRow'd) | { symbol, loading: true } | { symbol, error }
-
-  function persistWatchlistSymbols(){
-    try{ localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlistSymbols)); } catch(e){}
-  }
-  function readWatchlistDataCache(){
-    try{ return JSON.parse(localStorage.getItem(WATCHLIST_DATA_CACHE_KEY) || "{}"); } catch(e){ return {}; }
-  }
-  function writeWatchlistDataCache(cache){
-    try{ localStorage.setItem(WATCHLIST_DATA_CACHE_KEY, JSON.stringify(cache)); } catch(e){}
-  }
-
-  function getWatchlistSymbols(){ return watchlistSymbols.slice(); }
-  function getWatchlistStocks(){ return watchlistSymbols.map(sym => watchlistStocks[sym] || { symbol: sym, loading: true }); }
-
-  async function loadWatchlistSymbol(symbol, apiKey, useCache){
-    const dataCache = readWatchlistDataCache();
-    if(useCache && dataCache[symbol] && Date.now() - dataCache[symbol].fetchedAt < PRICE_CACHE_TTL_MS){
-      watchlistStocks[symbol] = buildRow(dataCache[symbol].data);
-      notify();
-      return true;
-    }
-
-    watchlistStocks[symbol] = { symbol, loading: true };
-    notify();
-    try{
-      const results = await fetchTimeSeriesWithRetry([symbol], apiKey);
-      const raw = buildStockFromSeries(symbol, symbol, "Watchlist", results[symbol]);
-      if(!raw){
-        watchlistStocks[symbol] = { symbol, error: "No price history found for this symbol." };
-        notify();
-        return false;
-      }
-      watchlistStocks[symbol] = buildRow(raw);
-      dataCache[symbol] = { fetchedAt: Date.now(), data: raw };
-      writeWatchlistDataCache(dataCache);
-      notify();
-
-      // Fundamentals, best-effort, sharing the same cache Trending fills.
-      const statsCache = readCache(STATS_CACHE_KEY, STATS_CACHE_TTL_MS) || {};
-      if(statsCache[symbol]){
-        Object.assign(watchlistStocks[symbol], statsCache[symbol]);
-        notify();
-      } else {
-        fetchStatisticsFor(symbol, apiKey).then(stats => {
-          if(!stats || !watchlistStocks[symbol]) return;
-          Object.assign(watchlistStocks[symbol], stats);
-          const cache = readCache(STATS_CACHE_KEY, STATS_CACHE_TTL_MS) || {};
-          cache[symbol] = stats;
-          writeCache(STATS_CACHE_KEY, cache);
-          notify();
-        });
-      }
-      return true;
-    } catch(e){
-      watchlistStocks[symbol] = { symbol, error: e.message || "Couldn't load this symbol." };
-      notify();
-      return false;
-    }
-  }
-
-  async function addWatchlistSymbol(rawSymbol){
-    const symbol = (rawSymbol || "").trim().toUpperCase();
-    if(!symbol || !/^[A-Z][A-Z.]{0,7}$/.test(symbol)){
-      return { ok: false, error: "Enter a valid ticker symbol." };
-    }
-    const apiKey = getApiKey();
-    if(!apiKey) return { ok: false, error: "No Twelve Data API key configured." };
-
-    if(!watchlistSymbols.includes(symbol)){
-      watchlistSymbols.push(symbol);
-      persistWatchlistSymbols();
-    }
-    const ok = await loadWatchlistSymbol(symbol, apiKey, true);
-    if(!ok){
-      // Keep it in the list with its error shown rather than silently dropping
-      // it — the user can remove it themselves if the symbol was a typo.
-    }
-    return { ok };
-  }
-
-  function removeWatchlistSymbol(symbol){
-    watchlistSymbols = watchlistSymbols.filter(s => s !== symbol);
-    delete watchlistStocks[symbol];
-    persistWatchlistSymbols();
-    notify();
-  }
-
-  async function initWatchlist(){
-    const apiKey = getApiKey();
-    if(!apiKey || !watchlistSymbols.length) return;
-    for(const symbol of watchlistSymbols){
-      await loadWatchlistSymbol(symbol, apiKey, true);
-    }
-  }
-
-  const ready = loadMarketData();
-  ready.then(() => initWatchlist());
+  const ready = Promise.resolve();
 
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.market = {
     getScreenedList, getUniverseSize, pickStock, getStatus, onUpdate, ready,
-    getWatchlistSymbols, getWatchlistStocks, addWatchlistSymbol, removeWatchlistSymbol
+    getWatchlistSymbols, getWatchlistStocks
   };
 })();
