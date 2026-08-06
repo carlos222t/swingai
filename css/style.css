@@ -68,15 +68,22 @@ a{color:inherit;text-decoration:none;}
   display:flex;
   align-items:center;
 }
+.brand-logo-chip{
+  background:#fff;
+  border-radius:8px;
+  padding:5px 8px;
+  display:inline-flex;
+  align-items:center;
+}
 .brand-logo-wrap{
-  width:84px;height:40px;
+  width:86px;height:40px;
   overflow:hidden;
   position:relative;
 }
 .brand-logo{
   position:absolute;
-  height:112px;width:auto;
-  top:-31px;left:-46px;
+  height:107px;width:auto;
+  top:-30px;left:-37px;
   display:block;
 }
 
