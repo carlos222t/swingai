@@ -45,12 +45,15 @@
     ["XOM","Exxon Mobil","Energy"]
   ];
 
-  // Local-only proxy (swingai-server/) that holds the Anthropic key and asks
-  // Claude, grounded with web search, for a handful of stocks currently
+  // Asks Claude, grounded with web search, for a handful of stocks currently
   // trending with swing traders. Never called directly from the browser —
-  // Anthropic's API rejects browser origins outright. If the proxy isn't
-  // running, this fails silently and the universe just stays at the base 8.
-  const AI_TRENDING_URL = "http://localhost:8787/api/trending-stocks";
+  // Anthropic's API rejects browser origins outright — so this always goes
+  // through a server: the local swingai-server proxy in dev, or the
+  // /api/trending-stocks Vercel function once deployed. If neither is
+  // reachable, this fails silently and the universe just stays at the base 8.
+  const AI_TRENDING_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? "http://localhost:8787/api/trending-stocks"
+    : "/api/trending-stocks";
   const AI_TICKERS_CACHE_KEY = "swingai_ai_tickers_cache_v1";
   const AI_TICKERS_CACHE_TTL_MS = 60 * 60 * 1000;
 

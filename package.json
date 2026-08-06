@@ -1,0 +1,7 @@
+{
+  "name": "swingai",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  }
+}
