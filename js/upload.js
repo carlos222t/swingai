@@ -1,9 +1,31 @@
-/* Upload Trade page: take a screenshot, preview it, then run it through
-   tradeAnalysis.js and render the bull/bear breakdown. */
+/* Upload Trade page: take a screenshot, preview it, then send it to
+   /api/analyze-trade (Claude, vision) and render the real bull/bear
+   breakdown it reads off the actual chart. */
 (function(){
   "use strict";
 
+  const ANALYZE_URL = "/api/analyze-trade";
+  const MAX_DIMENSION = 1400;
+  const JPEG_QUALITY = 0.85;
+
   let currentFile = null;
+
+  function fileToCompressedBase64(file){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+        resolve({ base64: dataUrl.split(",")[1], mediaType: "image/jpeg" });
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
 
   function showStage(stage){
     document.getElementById("uploadStage").hidden = stage !== "upload";
@@ -44,11 +66,13 @@
       ? bear.map(t => `<li>${t}</li>`).join("")
       : `<li class="sign-empty">No red flags showed up in this read.</li>`;
 
-    document.getElementById("newsList").innerHTML = news.map(n => `
-      <div class="news-row">
-        <span class="news-tag ${n.tag.toLowerCase()}">${n.tag}</span>
-        <span class="news-text">${n.text}</span>
-      </div>`).join("");
+    document.getElementById("newsList").innerHTML = news.length
+      ? news.map(n => `
+        <div class="news-row">
+          <span class="news-tag ${n.tag.toLowerCase()}">${n.tag}</span>
+          <span class="news-text">${n.text}</span>
+        </div>`).join("")
+      : `<div class="news-row"><span class="news-text">No relevant recent news found for this one.</span></div>`;
 
     document.getElementById("reportStats").innerHTML = `
       <div class="stat-row"><span>Week</span><b class="${stock.weeklyChangePct > 0 ? "up" : stock.weeklyChangePct < 0 ? "down" : ""}">${fmtPct(stock.weeklyChangePct)}</b></div>
@@ -87,27 +111,28 @@
     document.getElementById("analyzeBtn").addEventListener("click", async () => {
       if(!currentFile) return;
       const btn = document.getElementById("analyzeBtn");
+      const errEl = document.getElementById("uploadError");
       btn.disabled = true;
       btn.textContent = "Reading the chart...";
+      errEl.hidden = true;
 
-      await window.SwingAI.market.ready;
-      const marketStatus = window.SwingAI.market.getStatus();
-
-      setTimeout(() => {
-        if(marketStatus.error){
-          document.getElementById("uploadError").hidden = false;
-          document.getElementById("uploadError").textContent =
-            "Couldn't load real market data: " + marketStatus.error;
-          btn.disabled = false;
-          btn.textContent = "Analyze this trade";
-          return;
-        }
-        const seed = currentFile.name + "|" + currentFile.size + "|" + currentFile.lastModified;
-        const result = window.SwingAI.tradeAnalysis.analyze(seed);
+      try{
+        const { base64, mediaType } = await fileToCompressedBase64(currentFile);
+        const res = await fetch(ANALYZE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mediaType })
+        });
+        const result = await res.json();
+        if(!res.ok) throw new Error(result.error || "Analysis failed.");
         renderReport(result);
+      } catch(e){
+        errEl.hidden = false;
+        errEl.textContent = "Couldn't analyze this chart: " + (e.message || "unknown error");
+      } finally {
         btn.disabled = false;
         btn.textContent = "Analyze this trade";
-      }, 550);
+      }
     });
 
     document.getElementById("newTradeBtn").addEventListener("click", () => {

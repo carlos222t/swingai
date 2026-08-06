@@ -4,25 +4,19 @@
    they're a snapshot, not a live feed, so they won't move again until
    someone edits this file. Trending is a fixed 10-name list; Premium is a
    separate fixed personal watchlist. Both share the same row shape, so
-   trending.js/premium.js render them identically, and tradeAnalysis.js
-   (Upload Trade) draws from the full combined 20-name pool. */
+   trending.js/premium.js render them identically. (Upload Trade doesn't use
+   this file at all — it sends the uploaded chart to /api/analyze-trade for
+   a real AI read instead of picking from a canned list.) */
 (function(){
   "use strict";
 
-  function hashCode(str){
-    let h = 0;
-    for(let i = 0; i < str.length; i++){
-      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    }
-    return h;
-  }
   function round2(n){ return Math.round(n * 100) / 100; }
 
   // Raw researched numbers per ticker, as of market close Aug 6, 2026. mapRow()
   // below derives the EMA-distance fields (dist20/dist50, and the sma20/sma50
-  // aliases tradeAnalysis.js reads) from ema21Close/ema50Close so those don't
-  // have to be hand-computed here. EMA values use each source's EMA20 preset
-  // as a close proxy for EMA21 (no source offers an exact 21-day preset).
+  // aliases) from ema21Close/ema50Close so those don't have to be hand-computed
+  // here. EMA values use each source's EMA20 preset as a close proxy for EMA21
+  // (no source offers an exact 21-day preset).
   const RAW_TRENDING = [
     { symbol: "NVDA", name: "NVIDIA Corporation", sector: "Semiconductors",
       price: 218.99, dailyChangePct: -0.10, volume: 114304204, relVol: 0.89,
@@ -140,7 +134,6 @@
 
   const TRENDING_STOCKS = RAW_TRENDING.map(mapRow);
   const PREMIUM_STOCKS = RAW_PREMIUM.map(mapRow);
-  const ALL_STOCKS = TRENDING_STOCKS.concat(PREMIUM_STOCKS);
 
   const listeners = [];
   function onUpdate(cb){ listeners.push(cb); }
@@ -150,12 +143,6 @@
   function getScreenedList(){ return TRENDING_STOCKS; }
   function getUniverseSize(){ return TRENDING_STOCKS.length; }
 
-  function pickStock(seed){
-    if(!ALL_STOCKS.length) return null;
-    const idx = Math.abs(hashCode(seed)) % ALL_STOCKS.length;
-    return ALL_STOCKS[idx];
-  }
-
   function getWatchlistSymbols(){ return PREMIUM_STOCKS.map(s => s.symbol); }
   function getWatchlistStocks(){ return PREMIUM_STOCKS; }
 
@@ -163,7 +150,7 @@
 
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.market = {
-    getScreenedList, getUniverseSize, pickStock, getStatus, onUpdate, ready,
+    getScreenedList, getUniverseSize, getStatus, onUpdate, ready,
     getWatchlistSymbols, getWatchlistStocks
   };
 })();
