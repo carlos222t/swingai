@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwingAI · Upload Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="topbar">
+    <a href="trending.html" class="back-link" aria-label="Back to Trending">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div class="brand"><span class="brand-mark">S</span> SwingAI</div>
+    <span class="topbar-spacer"></span>
+  </div>
+
+  <div class="page-title">Upload Trade</div>
+  <div class="page-sub">Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist.</div>
+
+  <div id="uploadStage">
+    <label class="dropzone" id="dropzone" for="fileInput">
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <div class="dropzone-title">Tap to upload a screenshot</div>
+      <div class="dropzone-sub">PNG or JPG, any trading chart</div>
+    </label>
+  </div>
+
+  <div id="previewStage" hidden>
+    <img id="previewImage" class="preview-image" src="" alt="Uploaded chart">
+    <button type="button" class="analyze-btn" id="analyzeBtn">Analyze this trade</button>
+    <button type="button" class="text-btn" id="resetBtn">Choose a different screenshot</button>
+    <div class="status-banner error" id="uploadError" hidden></div>
+  </div>
+
+  <div id="reportStage" hidden>
+    <div class="report-header">
+      <div>
+        <div class="report-symbol" id="reportSymbol"></div>
+        <div class="report-name" id="reportName"></div>
+      </div>
+      <div class="report-price" id="reportPrice"></div>
+    </div>
+
+    <div class="report-score-block">
+      <div class="report-score-row">
+        <span class="report-score" id="reportScore"></span>
+        <span class="report-verdict" id="reportVerdict"></span>
+      </div>
+      <div class="report-bar"><div class="report-bar-fill" id="reportBar"></div></div>
+    </div>
+
+    <div class="report-stats" id="reportStats"></div>
+
+    <div class="section-divider"></div>
+
+    <div class="sign-block">
+      <div class="sign-heading up">What's pointing up</div>
+      <ul class="sign-list up" id="bullList"></ul>
+    </div>
+
+    <div class="sign-block">
+      <div class="sign-heading down">What's pointing down</div>
+      <ul class="sign-list down" id="bearList"></ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="news-heading">Recent news that could move this stock</div>
+    <div id="newsList"></div>
+
+    <div class="criteria-footnote">
+      <b>How this read works</b> &nbsp;A 21/50 EMA pullback setup buys a temporary dip inside an uptrend. Price should sit above both the 21 and 50 EMA with the 21 on top, then pull back to one of those lines before bouncing on rising volume. The price, EMA and volume numbers here are real market data. Which stock they're pulled from, the candle-pattern read, and the news items below are still simulated, since this doesn't actually look at your screenshot and there's no live news feed connected yet.
+    </div>
+
+    <button type="button" class="text-btn" id="newTradeBtn">Analyze another trade</button>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/marketData.js"></script>
+<script src="js/tradeAnalysis.js"></script>
+<script src="js/upload.js"></script>
+</body>
+</html>

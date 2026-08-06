@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SwingAI · Trending</title>
+<title>SwingAI · Premium Stocks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -15,13 +15,19 @@
   <div class="topbar">
     <div class="brand"><span class="brand-mark">S</span> SwingAI</div>
     <nav class="topnav">
-      <a href="trending.html" class="topnav-link active">Trending</a>
-      <a href="premium.html" class="topnav-link">Premium</a>
+      <a href="trending.html" class="topnav-link">Trending</a>
+      <a href="premium.html" class="topnav-link active">Premium</a>
     </nav>
   </div>
 
-  <div class="page-title">Trending</div>
-  <div class="page-sub" id="trendModeSub">One combined screen: the 21 EMA sitting within 3% of price, either side.</div>
+  <div class="page-title">Premium Stocks</div>
+  <div class="page-sub">Your own list. Add a ticker and we'll pull real price, volume and fundamentals for it &mdash; no screening.</div>
+
+  <form class="add-ticker-form" id="addTickerForm">
+    <input type="text" id="addTickerInput" class="add-ticker-input mono" placeholder="e.g. AAPL" maxlength="8" autocomplete="off" spellcheck="false">
+    <button type="submit" class="add-ticker-btn">Add</button>
+  </form>
+  <div class="add-ticker-error" id="addTickerError" hidden></div>
 
   <div class="section-divider"></div>
 
@@ -29,22 +35,14 @@
 
   <div class="screener-table-wrap" id="tableWrap" hidden>
     <table class="screener-table">
-      <thead><tr id="trendTableHead"></tr></thead>
-      <tbody id="trendTableBody"></tbody>
+      <thead><tr id="premiumTableHead"></tr></thead>
+      <tbody id="premiumTableBody"></tbody>
     </table>
   </div>
-
-  <div class="fundamentals-note" id="fundamentalsNote" hidden>Filling in P/E, EPS and dividend data from real filings, one symbol at a time to stay within the free API tier&hellip;</div>
-
-  <div class="criteria-footnote" id="trendCriteria"></div>
 </div>
-
-<a href="upload.html" class="fab-upload" aria-label="Upload a trade">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-</a>
 
 <script src="js/config.js"></script>
 <script src="js/marketData.js"></script>
-<script src="js/trending.js"></script>
+<script src="js/premium.js"></script>
 </body>
 </html>
