@@ -1,21 +1,16 @@
-/* Trending tab: runs a single combined screener over real Twelve Data market
-   data (marketData.js) and renders it as a sortable stats table. A stock
-   qualifies if its 21 EMA sits 0-3% above price (Momentum: hasn't reclaimed
-   it yet) or 0-3% below price (Pullback: resting on it as support), tagged
-   per row via the Setup column. Fundamentals (P/E, EPS, div yield) load in
-   the background after the price/EMA data, so the table re-renders as
-   marketData fills each one in. */
+/* Trending tab: renders the ten hand-picked names as a sortable stats
+   table. Fundamentals (P/E, EPS, div yield) load in the background after
+   the price/EMA data, so the table re-renders as marketData fills each
+   one in. */
 (function(){
   "use strict";
   const market = window.SwingAI.market;
 
-  const PAGE_SUB = "Ten hand-picked names, tagged by where price sits against the 21 EMA.";
-  const CRITERIA = "<b>Momentum</b> &mdash; 21 EMA sits just above price, still catching up. <b>Pullback</b> &mdash; price has reclaimed the 21 EMA and is resting on it as support.";
+  const PAGE_SUB = "Ten hand-picked names, screened against real market data.";
 
   // "kind" drives how the raw number is split into a value + a small muted
   // unit suffix (or colored, for the two percent-change columns).
   const COLUMNS = [
-    { key: "setup", label: "Setup", kind: "setup", get: r => r.setup },
     { key: "price", label: "Price", kind: "money", get: r => r.price },
     { key: "chg", label: "Chg %", kind: "pctColored", get: r => r.dailyChangePct },
     { key: "vol", label: "Vol", kind: "volume", get: r => r.volume },
@@ -39,7 +34,6 @@
   function renderValue(col, v){
     if(v == null) return `<td class="mono">—</td>`;
     switch(col.kind){
-      case "setup": return `<td><span class="setup-badge ${v.toLowerCase()}">${v}</span></td>`;
       case "money": return `<td class="mono">${cell(v.toFixed(2), "USD")}</td>`;
       case "marketcap": {
         const [n, unit] = v >= 1e12 ? [v / 1e12, "T"] : v >= 1e9 ? [v / 1e9, "B"] : [v / 1e6, "M"];
@@ -71,7 +65,6 @@
 
   function renderMeta(){
     document.getElementById("trendModeSub").textContent = PAGE_SUB;
-    document.getElementById("trendCriteria").innerHTML = `<b>Trending criteria</b> &nbsp;${CRITERIA}`;
   }
 
   function renderHead(list){

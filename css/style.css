@@ -129,7 +129,7 @@ a{color:inherit;text-decoration:none;}
   vertical-align:-1px;
 }
 
-.profile-menu{position:relative;}
+.profile-menu{position:relative;display:flex;align-items:center;}
 .profile-dropdown{
   position:absolute;
   top:calc(100% + 8px);
@@ -365,18 +365,6 @@ a{color:inherit;text-decoration:none;}
 .down{color:var(--critical-text);}
 
 .container-wide{max-width:1180px;}
-
-.setup-badge{
-  display:inline-block;
-  font-size:.7rem;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.3px;
-  padding:3px 9px;
-  border-radius:999px;
-}
-.setup-badge.momentum{background:rgba(12,163,12,.16);color:var(--good-text);}
-.setup-badge.pullback{background:rgba(208,59,59,.16);color:var(--critical-text);}
 
 /* ---------- Screener table: plain, dense, quote-terminal styling ---------- */
 .screener-table-wrap{
