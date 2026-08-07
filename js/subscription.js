@@ -18,7 +18,7 @@
     }
   };
 
-  let term = "monthly";
+  let term = "6month";
 
   function render(){
     ["basic", "premium"].forEach(plan => {
