@@ -122,8 +122,9 @@
       return;
     }
 
-    document.getElementById("pageSub").textContent =
-      `Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. ${limit - used} of ${limit} uploads left this month.`;
+    document.getElementById("pageSub").textContent = auth.isOwner()
+      ? "Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. Unlimited uploads (owner)."
+      : `Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. ${limit - used} of ${limit} uploads left this month.`;
 
     fileInput.addEventListener("change", () => onFileChosen(fileInput.files[0]));
 

@@ -74,8 +74,10 @@
   function planLimits(plan){
     return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
   }
+  // The owner runs the site — they shouldn't have to buy their own product
+  // to get full access, regardless of whatever "plan" their account has.
   function hasPremiumAccess(){
-    return planLimits(getPlan()).premiumStocks;
+    return isOwner() || planLimits(getPlan()).premiumStocks;
   }
 
   // ---------- Upload usage (resets every calendar month) ----------
@@ -100,6 +102,7 @@
     return (usage[usageId()] && usage[usageId()][monthKey()]) || 0;
   }
   function getUploadLimit(){
+    if(isOwner()) return Infinity;
     return planLimits(getPlan()).monthlyUploads;
   }
   function canUpload(){

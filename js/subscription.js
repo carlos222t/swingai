@@ -71,10 +71,18 @@
   });
 
   function applyPlanGating(){
-    const currentPlan = auth.getPlan();
     const basicBtn = document.querySelector('.plan-choose-btn[data-plan="basic"]');
     const premiumBtn = document.querySelector('.plan-choose-btn[data-plan="premium"]');
 
+    if(auth.isOwner()){
+      basicBtn.disabled = true;
+      basicBtn.textContent = "You're the owner";
+      premiumBtn.disabled = true;
+      premiumBtn.textContent = "You're the owner";
+      return;
+    }
+
+    const currentPlan = auth.getPlan();
     if(currentPlan === "premium"){
       basicBtn.disabled = true;
       basicBtn.textContent = "Included in Premium";
