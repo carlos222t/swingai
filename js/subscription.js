@@ -1,11 +1,10 @@
 /* Plan selection. "Get in for free" (plain link in subscription.html) just
-   goes straight into the app. The paid buttons are wired up to POST to
-   /api/create-checkout-session, which doesn't exist yet — real charging
-   needs Stripe keys and a backend to record the resulting subscription
-   (see sql/schema.sql). Until then this shows an honest "not connected
-   yet" message instead of pretending a purchase went through. */
+   goes straight into the app. The paid buttons POST to
+   /api/create-checkout-session (real Stripe Checkout, test mode) and
+   redirect to the URL it returns. */
 (function(){
   "use strict";
+  const auth = window.SwingAI.auth;
 
   document.querySelectorAll(".plan-choose-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -13,19 +12,20 @@
       const original = btn.textContent;
       btn.disabled = true;
       btn.textContent = "Starting checkout...";
+      const user = auth.getCurrentUser();
       try{
         const res = await fetch("/api/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan })
+          body: JSON.stringify({ plan, email: user && user.email, username: user && user.username })
         });
-        if(!res.ok) throw new Error();
-        const { url } = await res.json();
-        window.location.href = url;
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error || "Checkout failed to start.");
+        window.location.href = data.url;
       } catch(e){
         btn.disabled = false;
         btn.textContent = original;
-        alert("Payments aren't connected yet. Once Stripe is wired up, this button will take you to checkout for the " + plan + " plan.");
+        alert("Couldn't start checkout: " + e.message);
       }
     });
   });
