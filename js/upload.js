@@ -90,6 +90,7 @@
     document.getElementById("uploadPaywallCta").hidden = !showCta;
     document.getElementById("uploadPaywall").hidden = false;
     document.getElementById("pageSub").hidden = true;
+    document.getElementById("uploadStage").hidden = true;
   }
 
   function initUploadPage(){
