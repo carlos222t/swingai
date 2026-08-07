@@ -20,10 +20,13 @@
   // UI on the Premium page before this moves server-side.
   const OWNER_EMAIL = "carlosthomasmoreno@gmail.com";
 
-  // Permanently comped at Basic or better, regardless of what's actually on
-  // the account (a real subscription still takes priority, e.g. if this
-  // email is on Premium, it stays Premium — this only sets the floor).
-  const PERMANENT_BASIC_EMAILS = ["carthomas2008@gmail.com"];
+  // Permanently comped at this plan or better — a real subscription still
+  // takes priority (e.g. if this email is actually on Premium and its
+  // floor is Basic, it stays Premium; this only sets a minimum).
+  const PLAN_RANK = { free: 0, basic: 1, premium: 2 };
+  const PLAN_FLOORS = {
+    "carthomas2008@gmail.com": "premium"
+  };
 
   // Mirrors the plans table in sql/schema.sql.
   const PLAN_LIMITS = {
@@ -63,7 +66,8 @@
   function getPlan(){
     const user = getCurrentUser();
     const plan = (user && user.plan) || "free";
-    if(user && plan === "free" && PERMANENT_BASIC_EMAILS.includes(user.email)) return "basic";
+    const floor = user && PLAN_FLOORS[user.email];
+    if(floor && PLAN_RANK[floor] > PLAN_RANK[plan]) return floor;
     return plan;
   }
 

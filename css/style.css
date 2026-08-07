@@ -173,6 +173,33 @@ a{color:inherit;text-decoration:none;}
   box-shadow:var(--shadow-sm);
 }
 
+.upload-usage-bar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  padding:16px 20px;
+  text-align:center;
+  background:var(--surface);
+  border-top:1px solid var(--border-strong);
+  box-shadow:0 -8px 24px rgba(0,0,0,.35);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:1.05rem;
+  font-weight:800;
+  color:var(--text);
+  z-index:40;
+}
+.upload-usage-bar .count{color:var(--brand-2);}
+.upload-usage-bar .count.at-limit{color:var(--critical-text);}
+.upload-usage-bar .label{
+  display:block;
+  margin-top:2px;
+  font-family:'Inter',sans-serif;
+  font-size:.68rem;
+  font-weight:600;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+
 .section-divider{
   height:1px;
   background:var(--border);

@@ -84,6 +84,18 @@
     showStage("report");
   }
 
+  function updateUsageBar(){
+    const auth = window.SwingAI.auth;
+    const bar = document.getElementById("uploadUsageBar");
+    if(auth.isOwner()){ bar.hidden = true; return; }
+    const limit = auth.getUploadLimit();
+    const used = auth.getUploadsThisMonth();
+    if(!limit){ bar.hidden = true; return; }
+    const atLimit = used >= limit;
+    bar.innerHTML = `<span class="count${atLimit ? " at-limit" : ""}">${used}/${limit}</span><span class="label">Uploads used this month</span>`;
+    bar.hidden = false;
+  }
+
   function showPaywall(title, sub, showCta){
     document.getElementById("uploadPaywallTitle").textContent = title;
     document.getElementById("uploadPaywallSub").textContent = sub;
@@ -119,12 +131,14 @@
           : "Resets at the start of next month.",
         plan === "basic"
       );
+      updateUsageBar();
       return;
     }
 
     document.getElementById("pageSub").textContent = auth.isOwner()
       ? "Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. Unlimited uploads (owner)."
-      : `Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. ${limit - used} of ${limit} uploads left this month.`;
+      : "Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist.";
+    updateUsageBar();
 
     fileInput.addEventListener("change", () => onFileChosen(fileInput.files[0]));
 
@@ -163,6 +177,7 @@
         const result = await res.json();
         if(!res.ok) throw new Error(result.error || "Analysis failed.");
         auth.recordUpload();
+        updateUsageBar();
         renderReport(result);
       } catch(e){
         errEl.hidden = false;
