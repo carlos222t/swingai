@@ -12,8 +12,8 @@ const Stripe = require("stripe");
 let stripe;
 
 const PRICE_IDS = {
-  basic: process.env.STRIPE_PRICE_BASIC,
-  premium: process.env.STRIPE_PRICE_PREMIUM
+  basic: { monthly: process.env.STRIPE_PRICE_BASIC, "6month": process.env.STRIPE_PRICE_BASIC_6MO },
+  premium: { monthly: process.env.STRIPE_PRICE_PREMIUM, "6month": process.env.STRIPE_PRICE_PREMIUM_6MO }
 };
 
 async function readBody(req){
@@ -41,7 +41,8 @@ module.exports = async (req, res) => {
   try{ body = JSON.parse(await readBody(req)); }
   catch(e){ res.status(400).json({ error: "Invalid JSON body" }); return; }
 
-  const priceId = PRICE_IDS[body.plan];
+  const term = body.term === "6month" ? "6month" : "monthly";
+  const priceId = PRICE_IDS[body.plan] && PRICE_IDS[body.plan][term];
   if(!priceId){
     res.status(400).json({ error: "Unknown plan. Expected 'basic' or 'premium'." });
     return;
@@ -58,7 +59,7 @@ module.exports = async (req, res) => {
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.plan}`,
       cancel_url: `${origin}/subscription.html`,
       customer_email: body.email || undefined,
-      metadata: { plan: body.plan, username: body.username || "" }
+      metadata: { plan: body.plan, term, username: body.username || "" }
     });
     res.status(200).json({ url: session.url });
   } catch(e){

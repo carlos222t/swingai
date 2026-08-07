@@ -21,11 +21,17 @@
     <div class="plans-sub">Cancel anytime.</div>
   </div>
 
+  <div class="billing-toggle" id="billingToggle">
+    <button type="button" class="billing-toggle-btn active" data-term="monthly">Monthly</button>
+    <button type="button" class="billing-toggle-btn" data-term="6month">Every 6 months</button>
+  </div>
+
   <div class="plans-grid">
     <div class="plan-card">
       <span class="plan-badge">Basic</span>
       <div class="plan-name">Basic</div>
-      <div class="plan-price">$19.99<span>/mo</span></div>
+      <div class="plan-price" id="basicPrice">$19.99<span>/mo</span></div>
+      <div class="plan-savings" id="basicSavings" hidden></div>
       <ul class="plan-features">
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -46,7 +52,8 @@
     <div class="plan-card featured">
       <span class="plan-badge">Premium</span>
       <div class="plan-name">Premium</div>
-      <div class="plan-price"><span class="plan-price-was">$55.00</span>$39.99<span>/mo</span></div>
+      <div class="plan-price" id="premiumPrice"><span class="plan-price-was">$55.00</span>$39.99<span>/mo</span></div>
+      <div class="plan-savings" id="premiumSavings" hidden></div>
       <ul class="plan-features">
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
