@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: "SwingAI <onboarding@resend.dev>",
+        from: "SwingAI <verify@swingai.net>",
         to: [email],
         subject: "Your SwingAI verification code",
         html: `<p>Your verification code is <b style="font-size:20px;">${code}</b></p><p>It expires in 10 minutes. If you didn't request this, you can ignore it.</p>`
