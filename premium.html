@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -16,8 +17,14 @@
     <div class="brand"><span class="brand-logo-chip"><span class="brand-logo-wrap"><img src="assets/logo.png" alt="SwingAI" class="brand-logo"></span></span></div>
     <nav class="topnav">
       <a href="trending" class="topnav-link">Trending</a>
-      <a href="premium" class="topnav-link active">Premium</a>
-      <a href="signin" class="topnav-link" id="topbarAuthLink">Sign in</a>
+      <a href="premium" class="topnav-link active">Premium<span class="tier-badge" title="Premium plan required">&#128081;</span></a>
+      <div class="profile-menu" id="profileMenu">
+        <a href="signin" class="topnav-link" id="topbarAuthLink">Sign in</a>
+        <div class="profile-dropdown" id="profileDropdown" hidden>
+          <a href="subscription" class="profile-dropdown-item">Upgrade plan</a>
+          <button type="button" class="profile-dropdown-item profile-dropdown-logout" id="logoutBtn">Log out</button>
+        </div>
+      </div>
     </nav>
   </div>
 

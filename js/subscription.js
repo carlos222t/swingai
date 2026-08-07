@@ -70,5 +70,22 @@
     });
   });
 
+  function applyPlanGating(){
+    const currentPlan = auth.getPlan();
+    const basicBtn = document.querySelector('.plan-choose-btn[data-plan="basic"]');
+    const premiumBtn = document.querySelector('.plan-choose-btn[data-plan="premium"]');
+
+    if(currentPlan === "premium"){
+      basicBtn.disabled = true;
+      basicBtn.textContent = "Included in Premium";
+      premiumBtn.disabled = true;
+      premiumBtn.textContent = "You already have this";
+    } else if(currentPlan === "basic"){
+      basicBtn.disabled = true;
+      basicBtn.textContent = "You already have this";
+    }
+  }
+
   render();
+  applyPlanGating();
 })();
