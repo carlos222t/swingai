@@ -1,5 +1,6 @@
 {
+  "cleanUrls": true,
   "redirects": [
-    { "source": "/", "destination": "/signup.html" }
+    { "source": "/", "destination": "/signup" }
   ]
 }

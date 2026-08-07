@@ -56,8 +56,8 @@ module.exports = async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.plan}`,
-      cancel_url: `${origin}/subscription.html`,
+      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}&plan=${body.plan}`,
+      cancel_url: `${origin}/subscription`,
       customer_email: body.email || undefined,
       metadata: { plan: body.plan, term, username: body.username || "" }
     });

@@ -40,6 +40,6 @@
     const passwordHash = await auth.sha256Hex(password);
     sessionStorage.setItem("swingai_pending_signup", JSON.stringify({ username, email, passwordHash }));
 
-    window.location.href = "verify.html";
+    window.location.href = "verify";
   });
 })();

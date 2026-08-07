@@ -6,7 +6,7 @@
 
   const pendingRaw = sessionStorage.getItem(PENDING_KEY);
   if(!pendingRaw){
-    window.location.href = "signup.html";
+    window.location.href = "signup";
     return;
   }
   const pending = JSON.parse(pendingRaw);

@@ -47,7 +47,7 @@
       const plan = btn.dataset.plan;
       const user = auth.getCurrentUser();
       if(!user){
-        window.location.href = "signup.html";
+        window.location.href = "signup";
         return;
       }
       const original = btn.textContent;

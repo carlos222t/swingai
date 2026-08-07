@@ -33,6 +33,6 @@
     }
 
     auth.setCurrentUser({ username: user.username, email: user.email, plan: user.plan || "free" });
-    window.location.href = "trending.html";
+    window.location.href = "trending";
   });
 })();
