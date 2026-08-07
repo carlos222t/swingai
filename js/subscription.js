@@ -9,10 +9,14 @@
   document.querySelectorAll(".plan-choose-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const plan = btn.dataset.plan;
+      const user = auth.getCurrentUser();
+      if(!user){
+        window.location.href = "signup.html";
+        return;
+      }
       const original = btn.textContent;
       btn.disabled = true;
       btn.textContent = "Starting checkout...";
-      const user = auth.getCurrentUser();
       try{
         const res = await fetch("/api/create-checkout-session", {
           method: "POST",

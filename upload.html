@@ -21,7 +21,13 @@
   </div>
 
   <div class="page-title">Upload Trade</div>
-  <div class="page-sub">Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist.</div>
+  <div class="page-sub" id="pageSub">Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist.</div>
+
+  <div class="paywall" id="uploadPaywall" hidden>
+    <div class="paywall-title" id="uploadPaywallTitle"></div>
+    <div class="paywall-sub" id="uploadPaywallSub"></div>
+    <a href="subscription.html" class="plan-choose-btn" id="uploadPaywallCta" style="display:inline-block;text-decoration:none;margin-top:18px;">Upgrade</a>
+  </div>
 
   <div id="uploadStage">
     <label class="dropzone" id="dropzone" for="fileInput">
@@ -83,6 +89,7 @@
   </div>
 </div>
 
+<script src="js/auth.js"></script>
 <script src="js/upload.js"></script>
 </body>
 </html>

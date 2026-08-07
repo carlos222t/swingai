@@ -84,10 +84,45 @@
     showStage("report");
   }
 
+  function showPaywall(title, sub, showCta){
+    document.getElementById("uploadPaywallTitle").textContent = title;
+    document.getElementById("uploadPaywallSub").textContent = sub;
+    document.getElementById("uploadPaywallCta").hidden = !showCta;
+    document.getElementById("uploadPaywall").hidden = false;
+    document.getElementById("pageSub").hidden = true;
+  }
+
   function initUploadPage(){
     const fileInput = document.getElementById("fileInput");
     const dropzone = document.getElementById("dropzone");
     if(!fileInput) return;
+
+    const auth = window.SwingAI.auth;
+    const plan = auth.getPlan();
+    const limit = auth.getUploadLimit();
+    const used = auth.getUploadsThisMonth();
+
+    if(limit === 0){
+      showPaywall(
+        "Chart uploads are a Basic or Premium feature",
+        "Upgrade to get a real AI read on your trade screenshots against the pullback checklist.",
+        true
+      );
+      return;
+    }
+    if(used >= limit){
+      showPaywall(
+        `You've used all ${limit} uploads this month`,
+        plan === "basic"
+          ? "Resets at the start of next month, or upgrade to Premium for 15 a month."
+          : "Resets at the start of next month.",
+        plan === "basic"
+      );
+      return;
+    }
+
+    document.getElementById("pageSub").textContent =
+      `Drop in a chart screenshot and we'll read it against the 21/50 EMA pullback checklist. ${limit - used} of ${limit} uploads left this month.`;
 
     fileInput.addEventListener("change", () => onFileChosen(fileInput.files[0]));
 
@@ -125,6 +160,7 @@
         });
         const result = await res.json();
         if(!res.ok) throw new Error(result.error || "Analysis failed.");
+        auth.recordUpload();
         renderReport(result);
       } catch(e){
         errEl.hidden = false;

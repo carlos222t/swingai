@@ -35,9 +35,9 @@
     btn.textContent = "Creating account...";
 
     const passwordHash = await auth.sha256Hex(password);
-    users.push({ username, email, passwordHash, createdAt: Date.now() });
+    users.push({ username, email, passwordHash, plan: "free", createdAt: Date.now() });
     auth.saveUsers(users);
-    auth.setCurrentUser({ username, email });
+    auth.setCurrentUser({ username, email, plan: "free" });
 
     window.location.href = "subscription.html";
   });

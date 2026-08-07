@@ -7,7 +7,9 @@
   const user = window.SwingAI.auth.getCurrentUser();
   if(!user) return;
 
-  link.textContent = user.username;
+  const plan = window.SwingAI.auth.getPlan();
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+  link.textContent = `${user.username} (${planLabel})`;
   link.removeAttribute("href");
   link.style.cursor = "pointer";
   link.title = "Click to sign out";

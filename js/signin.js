@@ -32,7 +32,7 @@
       return;
     }
 
-    auth.setCurrentUser({ username: user.username, email: user.email });
+    auth.setCurrentUser({ username: user.username, email: user.email, plan: user.plan || "free" });
     window.location.href = "trending.html";
   });
 })();

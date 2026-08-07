@@ -129,6 +129,12 @@
   function initPremiumPage(){
     const table = document.getElementById("premiumTableBody");
     if(!table) return;
+
+    if(!window.SwingAI.auth.hasPremiumAccess()){
+      document.getElementById("paywall").hidden = false;
+      return;
+    }
+
     document.getElementById("tableWrap").hidden = false;
     render();
   }
