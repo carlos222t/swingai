@@ -87,7 +87,7 @@
   function showPaywall(title, sub, showCta){
     document.getElementById("uploadPaywallTitle").textContent = title;
     document.getElementById("uploadPaywallSub").textContent = sub;
-    document.getElementById("uploadPaywallCta").hidden = !showCta;
+    document.getElementById("uploadPaywallCta").style.display = showCta ? "inline-block" : "none";
     document.getElementById("uploadPaywall").hidden = false;
     document.getElementById("pageSub").hidden = true;
     document.getElementById("uploadStage").hidden = true;
