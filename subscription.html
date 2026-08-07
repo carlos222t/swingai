@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwingAI · Choose a Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="plans-wrap">
+  <div style="display:flex;justify-content:center;">
+    <span class="brand-logo-chip"><span class="brand-logo-wrap"><img src="assets/logo.png" alt="SwingAI" class="brand-logo"></span></span>
+  </div>
+
+  <div class="plans-header">
+    <div class="plans-title">Choose your plan</div>
+    <div class="plans-sub">Cancel anytime.</div>
+  </div>
+
+  <div class="plans-grid">
+    <div class="plan-card">
+      <span class="plan-badge">Basic</span>
+      <div class="plan-name">Basic</div>
+      <div class="plan-price">$19.99<span>/mo</span></div>
+      <ul class="plan-features">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <span>Free access to the Trending stocks &mdash; ten names screened every day against the 21 EMA pullback/momentum setup.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><b>5 chart uploads a month</b> &mdash; drop in a screenshot and get a real AI read against the pullback checklist.</span>
+        </li>
+      </ul>
+      <button type="button" class="plan-choose-btn" data-plan="basic">Choose Basic</button>
+    </div>
+
+    <div class="plan-card featured">
+      <span class="plan-badge">Premium</span>
+      <div class="plan-name">Premium</div>
+      <div class="plan-price">$39.99<span>/mo</span></div>
+      <ul class="plan-features">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <span>Everything in Basic, plus the <b>Premium stocks</b> watchlist &mdash; hand-selected names we think are on the verge of a good trade, picked and maintained directly by us.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><b>15 chart uploads a month</b> &mdash; three times the room to check trades against the AI read.</span>
+        </li>
+      </ul>
+      <button type="button" class="plan-choose-btn" data-plan="premium">Choose Premium</button>
+    </div>
+  </div>
+
+  <a href="trending.html" class="plans-free-link" id="freeLink">Get in for free</a>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/subscription.js"></script>
+</body>
+</html>
