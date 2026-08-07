@@ -114,13 +114,18 @@
     { symbol: "WULF", name: "TeraWulf Inc.", sector: "Bitcoin Mining",
       price: 17.62, dailyChangePct: -2.52, volume: 20171606, relVol: 0.60,
       marketCap: 8790000000, peRatio: null, epsDilTTM: -4.51, epsDilGrowthYoY: null,
-      divYieldPct: 0,
+      divYieldPct: 0, tag: "suggested",
       ema21Close: 18.27, ema50Close: 18.35, weeklyChangePct: -1.12, monthlyChangePct: -22.82 },
     { symbol: "WFC", name: "Wells Fargo & Company", sector: "Banking",
       price: 87.59, dailyChangePct: -1.77, volume: 13163482, relVol: 0.78,
       marketCap: 264870000000, peRatio: 12.73, epsDilTTM: 6.88, epsDilGrowthYoY: 18.10,
       divYieldPct: 2.28,
-      ema21Close: 88.13, ema50Close: 87.58, weeklyChangePct: 2.53, monthlyChangePct: 2.37 }
+      ema21Close: 88.13, ema50Close: 87.58, weeklyChangePct: 2.53, monthlyChangePct: 2.37 },
+    { symbol: "TXG", name: "10x Genomics, Inc.", sector: "Life Sciences",
+      price: 52.03, dailyChangePct: 14.10, volume: 4753231, relVol: 1.59,
+      marketCap: 6610000000, peRatio: null, epsDilTTM: -0.59, epsDilGrowthYoY: null,
+      divYieldPct: 0, tag: "suggested",
+      ema21Close: 47.85, ema50Close: 47.43, weeklyChangePct: 6.39, monthlyChangePct: 9.70 }
   ];
 
   function mapRow(raw){

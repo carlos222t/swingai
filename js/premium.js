@@ -4,6 +4,20 @@
 (function(){
   "use strict";
   const market = window.SwingAI.market;
+  const auth = window.SwingAI.auth;
+
+  function tagBadgeHTML(tag){
+    if(tag === "favorite") return '<span class="tag-badge tag-favorite" title="Favorite">&#9733;</span>';
+    if(tag === "suggested") return '<span class="tag-badge tag-suggested">Suggested</span>';
+    if(tag === "lookout") return '<span class="tag-badge tag-lookout">Lookout</span>';
+    return "";
+  }
+  function tagSelectHTML(symbol, tag){
+    const opt = (value, label) => `<option value="${value}"${tag === value ? " selected" : ""}>${label}</option>`;
+    return `<select class="tag-select" data-symbol="${symbol}" title="Set tag (owner only)">
+      ${opt("", "No tag")}${opt("suggested", "Suggested")}${opt("lookout", "Lookout")}${opt("favorite", "Favorite ★")}
+    </select>`;
+  }
 
   const COLUMNS = [
     { key: "price", label: "Price", kind: "money", get: r => r.price },
@@ -101,13 +115,17 @@
       body.innerHTML = `<tr><td colspan="${COLUMNS.length + 1}"><div class="empty-state">No stocks yet.</div></td></tr>`;
       return;
     }
+    const owner = auth.isOwner();
     body.innerHTML = sortedList(list).map((r, i) => {
       const hue = avatarHue(r.symbol);
+      const tag = auth.getEffectiveTag(r);
       const idCell = `
         <td class="col-sym">
           <span class="list-avatar" style="background:hsl(${hue} 38% 40%)">${r.symbol.charAt(0)}</span>
           <span class="list-sym-badge mono">${r.symbol}</span>
+          ${tagBadgeHTML(tag)}
           <span class="list-name" title="${r.name}">${r.name}</span>
+          ${owner ? tagSelectHTML(r.symbol, tag) : ""}
         </td>`;
       const cells = COLUMNS.map(col => renderValue(col, col.get(r))).join("");
       return `<tr style="--i:${i}" data-symbol="${r.symbol}" title="Open ${r.symbol} chart on TradingView">${idCell}${cells}</tr>`;
@@ -116,6 +134,14 @@
     body.querySelectorAll("tr[data-symbol]").forEach(tr => {
       tr.addEventListener("click", () => {
         window.open(`https://www.tradingview.com/chart/?symbol=${tr.dataset.symbol}`, "_blank", "noopener");
+      });
+    });
+    body.querySelectorAll(".tag-select").forEach(sel => {
+      sel.addEventListener("click", e => e.stopPropagation());
+      sel.addEventListener("change", e => {
+        e.stopPropagation();
+        auth.setTag(sel.dataset.symbol, sel.value || null);
+        render();
       });
     });
   }

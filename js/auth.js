@@ -13,6 +13,12 @@
   const USERS_KEY = "swingai_users_v1";
   const CURRENT_USER_KEY = "swingai_current_user_v1";
   const UPLOAD_USAGE_KEY = "swingai_upload_usage_v1";
+  const PREMIUM_TAGS_KEY = "swingai_premium_tags_v1";
+
+  // Client-only admin gate, same caveat as everything else in this file:
+  // not tamper-proof, just enough to build/test the owner-only tag-editing
+  // UI on the Premium page before this moves server-side.
+  const OWNER_EMAIL = "carlosthomasmoreno@gmail.com";
 
   // Mirrors the plans table in sql/schema.sql.
   const PLAN_LIMITS = {
@@ -107,10 +113,34 @@
     writeUsage(usage);
   }
 
+  function isOwner(){
+    const user = getCurrentUser();
+    return !!user && user.email === OWNER_EMAIL;
+  }
+
+  // ---------- Premium stock tags (owner-editable) ----------
+  // "suggested" | "lookout" | "favorite" | null. Overrides layer on top of
+  // whatever tag ships in marketData.js's static data, keyed by symbol.
+  function getTagOverrides(){
+    try{ return JSON.parse(localStorage.getItem(PREMIUM_TAGS_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function setTag(symbol, tag){
+    const overrides = getTagOverrides();
+    if(tag){ overrides[symbol] = tag; }
+    else { delete overrides[symbol]; }
+    localStorage.setItem(PREMIUM_TAGS_KEY, JSON.stringify(overrides));
+  }
+  function getEffectiveTag(stock){
+    const overrides = getTagOverrides();
+    return overrides[stock.symbol] || stock.tag || null;
+  }
+
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.auth = {
     sha256Hex, getUsers, saveUsers, getCurrentUser, setCurrentUser, clearCurrentUser,
     getPlan, setPlan, hasPremiumAccess,
-    getUploadsThisMonth, getUploadLimit, canUpload, recordUpload
+    getUploadsThisMonth, getUploadLimit, canUpload, recordUpload,
+    isOwner, getTagOverrides, setTag, getEffectiveTag
   };
 })();
