@@ -1,5 +1,5 @@
 {
   "redirects": [
-    { "source": "/", "destination": "/trending.html" }
+    { "source": "/", "destination": "/signup.html" }
   ]
 }
