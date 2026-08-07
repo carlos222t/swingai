@@ -80,7 +80,10 @@
 
       sessionStorage.removeItem(PENDING_KEY);
       sessionStorage.removeItem(TOKEN_KEY);
-      window.location.href = "subscription.html";
+
+      document.getElementById("verifyForm").hidden = true;
+      document.getElementById("signinSwitch").hidden = true;
+      document.getElementById("successStage").hidden = false;
     } catch(e){
       showError("verifyError", e.message);
       btn.disabled = false;

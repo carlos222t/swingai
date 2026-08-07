@@ -37,7 +37,13 @@
       <button type="button" class="text-btn" id="resendBtn">Resend code</button>
     </form>
 
-    <div class="auth-switch"><a href="signup.html">Back to sign up</a></div>
+    <div id="successStage" hidden>
+      <div class="page-title" style="text-align:center;">You're in!</div>
+      <div class="page-sub" style="text-align:center;">Your account is set up. Next, pick a plan.</div>
+      <a href="subscription.html" class="auth-submit" style="display:block;text-align:center;text-decoration:none;margin-top:20px;">Continue to plans</a>
+    </div>
+
+    <div class="auth-switch" id="signinSwitch"><a href="signup.html">Back to sign up</a></div>
   </div>
 </div>
 
