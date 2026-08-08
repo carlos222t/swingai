@@ -2,6 +2,14 @@
   "use strict";
   const auth = window.SwingAI.auth;
 
+  // Already have an account? Skip the sign-up form entirely — root ("/")
+  // redirects here at the server level (vercel.json), before any JS can
+  // see localStorage, so this is the earliest point that can check.
+  if(auth.getCurrentUser()){
+    window.location.href = "trending";
+    return;
+  }
+
   function showError(msg){
     const el = document.getElementById("signupError");
     el.textContent = msg;
