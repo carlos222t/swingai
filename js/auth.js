@@ -15,6 +15,7 @@
   const UPLOAD_USAGE_KEY = "swingai_upload_usage_v1";
   const PREMIUM_TAGS_KEY = "swingai_premium_tags_v1";
   const PREMIUM_DIRECTION_KEY = "swingai_premium_direction_v1";
+  const PREMIUM_DATA_KEY = "swingai_premium_data_v1";
 
   // Client-only admin gate, same caveat as everything else in this file:
   // not tamper-proof, just enough to build/test the owner-only tag-editing
@@ -167,12 +168,32 @@
     return getDirectionOverrides()[symbol] || null;
   }
 
+  // ---------- Premium stock data overrides (owner-editable) ----------
+  // Owner can hand-correct any displayed field (price, volume, etc.) from
+  // the Premium table's Save button instead of waiting on a data refresh.
+  // Overrides are stored per-symbol and merged on top of the static
+  // marketData.js row at render time — same pattern as tags/direction.
+  function getDataOverrides(){
+    try{ return JSON.parse(localStorage.getItem(PREMIUM_DATA_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function setDataOverride(symbol, fields){
+    const overrides = getDataOverrides();
+    overrides[symbol] = Object.assign({}, overrides[symbol] || {}, fields);
+    localStorage.setItem(PREMIUM_DATA_KEY, JSON.stringify(overrides));
+  }
+  function applyDataOverride(stock){
+    const override = getDataOverrides()[stock.symbol];
+    return override ? Object.assign({}, stock, override) : stock;
+  }
+
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.auth = {
     sha256Hex, getUsers, saveUsers, getCurrentUser, setCurrentUser, clearCurrentUser,
     getPlan, setPlan, hasPremiumAccess,
     getUploadsThisMonth, getUploadLimit, canUpload, recordUpload,
     isOwner, getTagOverrides, setTag, getEffectiveTag,
-    getDirectionOverrides, setDirection, getEffectiveDirection
+    getDirectionOverrides, setDirection, getEffectiveDirection,
+    getDataOverrides, setDataOverride, applyDataOverride
   };
 })();

@@ -30,16 +30,16 @@
   }
 
   const COLUMNS = [
-    { key: "price", label: "Price", kind: "money", get: r => r.price },
-    { key: "chg", label: "Chg %", kind: "pctColored", get: r => r.dailyChangePct },
-    { key: "vol", label: "Vol", kind: "volume", get: r => r.volume },
-    { key: "relvol", label: "Rel vol", kind: "plain", get: r => r.relVol },
-    { key: "mktcap", label: "Mkt cap", kind: "marketcap", get: r => r.marketCap },
-    { key: "pe", label: "P/E", kind: "plain", get: r => r.peRatio },
-    { key: "eps", label: "EPS dil", sub: "TTM", kind: "money", get: r => r.epsDilTTM },
-    { key: "epsgrowth", label: "EPS dil growth", sub: "TTM YoY", kind: "pctColored", get: r => r.epsDilGrowthYoY },
-    { key: "divyield", label: "Div yield %", sub: "TTM", kind: "pctPlain", get: r => r.divYieldPct },
-    { key: "sector", label: "Sector", kind: "text", get: r => r.sector }
+    { key: "price", field: "price", label: "Price", kind: "money", get: r => r.price },
+    { key: "chg", field: "dailyChangePct", label: "Chg %", kind: "pctColored", get: r => r.dailyChangePct },
+    { key: "vol", field: "volume", label: "Vol", kind: "volume", get: r => r.volume },
+    { key: "relvol", field: "relVol", label: "Rel vol", kind: "plain", get: r => r.relVol },
+    { key: "mktcap", field: "marketCap", label: "Mkt cap", kind: "marketcap", get: r => r.marketCap },
+    { key: "pe", field: "peRatio", label: "P/E", kind: "plain", get: r => r.peRatio },
+    { key: "eps", field: "epsDilTTM", label: "EPS dil", sub: "TTM", kind: "money", get: r => r.epsDilTTM },
+    { key: "epsgrowth", field: "epsDilGrowthYoY", label: "EPS dil growth", sub: "TTM YoY", kind: "pctColored", get: r => r.epsDilGrowthYoY },
+    { key: "divyield", field: "divYieldPct", label: "Div yield %", sub: "TTM", kind: "pctPlain", get: r => r.divYieldPct },
+    { key: "sector", field: "sector", label: "Sector", kind: "text", get: r => r.sector }
   ];
 
   let state = { sortKey: null, sortDir: -1 };
@@ -67,6 +67,13 @@
       case "pctPlain": return `<td class="mono">${cell(v.toFixed(2) + "%")}</td>`;
       case "text": return `<td>${v}</td>`;
     }
+  }
+  function renderEditableCell(col, r){
+    const v = col.get(r);
+    const type = col.kind === "text" ? "text" : "number";
+    const step = col.kind === "text" ? "" : ` step="any"`;
+    const raw = v == null ? "" : v;
+    return `<td class="mono"><input class="cell-edit" type="${type}"${step} data-symbol="${r.symbol}" data-field="${col.field}" data-kind="${col.kind}" value="${raw}"></td>`;
   }
 
   function sortBy(key){
@@ -140,7 +147,7 @@
           ${owner ? tagSelectHTML(r.symbol, tag) : ""}
           ${owner ? directionToggleHTML(r.symbol, direction) : ""}
         </td>`;
-      const cells = COLUMNS.map(col => renderValue(col, col.get(r))).join("");
+      const cells = COLUMNS.map(col => owner ? renderEditableCell(col, r) : renderValue(col, col.get(r))).join("");
       return `<tr style="--i:${i}" data-symbol="${r.symbol}" title="Open ${r.symbol} chart on TradingView">${idCell}${cells}</tr>`;
     }).join("");
 
@@ -165,10 +172,28 @@
         render();
       });
     });
+    body.querySelectorAll(".cell-edit").forEach(input => {
+      input.addEventListener("click", e => e.stopPropagation());
+      input.addEventListener("keydown", e => e.stopPropagation());
+    });
+  }
+
+  function saveEdits(){
+    const body = document.getElementById("premiumTableBody");
+    const bySymbol = {};
+    body.querySelectorAll(".cell-edit").forEach(input => {
+      const symbol = input.dataset.symbol;
+      const raw = input.value.trim();
+      const value = input.dataset.kind === "text" ? raw : (raw === "" ? null : parseFloat(raw));
+      bySymbol[symbol] = bySymbol[symbol] || {};
+      bySymbol[symbol][input.dataset.field] = value;
+    });
+    Object.keys(bySymbol).forEach(symbol => auth.setDataOverride(symbol, bySymbol[symbol]));
+    render();
   }
 
   function render(){
-    const list = market.getWatchlistStocks();
+    const list = market.getWatchlistStocks().map(r => auth.applyDataOverride(r));
     renderHead(list);
     renderBody(list);
   }
@@ -184,6 +209,16 @@
 
     document.getElementById("tableWrap").hidden = false;
     render();
+
+    if(auth.isOwner()){
+      const saveBtn = document.getElementById("saveStocksBtn");
+      saveBtn.hidden = false;
+      saveBtn.addEventListener("click", () => {
+        saveEdits();
+        saveBtn.textContent = "Saved";
+        setTimeout(() => { saveBtn.textContent = "Save changes"; }, 1200);
+      });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", initPremiumPage);
