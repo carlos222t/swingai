@@ -6,7 +6,7 @@
   "use strict";
   const market = window.SwingAI.market;
 
-  const PAGE_SUB = "Ten hand-picked names, screened against real market data.";
+  const PAGE_SUB = "Hand-picked names, screened against real market data.";
 
   // "kind" drives how the raw number is split into a value + a small muted
   // unit suffix (or colored, for the two percent-change columns).
