@@ -19,6 +19,16 @@
     </select>`;
   }
 
+  function directionBadgeHTML(direction){
+    if(direction === "long") return '<span class="tag-badge tag-long">Long</span>';
+    if(direction === "short") return '<span class="tag-badge tag-short">Short</span>';
+    return "";
+  }
+  function directionToggleHTML(symbol, direction){
+    const btn = (value, label) => `<button type="button" class="dir-btn dir-${value}${direction === value ? " active" : ""}" data-symbol="${symbol}" data-dir="${value}" title="Call ${label} (owner only)">${label}</button>`;
+    return `<span class="dir-toggle">${btn("long", "Long")}${btn("short", "Short")}</span>`;
+  }
+
   const COLUMNS = [
     { key: "price", label: "Price", kind: "money", get: r => r.price },
     { key: "chg", label: "Chg %", kind: "pctColored", get: r => r.dailyChangePct },
@@ -119,13 +129,16 @@
     body.innerHTML = sortedList(list).map((r, i) => {
       const hue = avatarHue(r.symbol);
       const tag = auth.getEffectiveTag(r);
+      const direction = auth.getEffectiveDirection(r.symbol);
       const idCell = `
         <td class="col-sym">
           <span class="list-avatar" style="background:hsl(${hue} 38% 40%)">${r.symbol.charAt(0)}</span>
           <span class="list-sym-badge mono">${r.symbol}</span>
           ${tagBadgeHTML(tag)}
+          ${directionBadgeHTML(direction)}
           <span class="list-name" title="${r.name}">${r.name}</span>
           ${owner ? tagSelectHTML(r.symbol, tag) : ""}
+          ${owner ? directionToggleHTML(r.symbol, direction) : ""}
         </td>`;
       const cells = COLUMNS.map(col => renderValue(col, col.get(r))).join("");
       return `<tr style="--i:${i}" data-symbol="${r.symbol}" title="Open ${r.symbol} chart on TradingView">${idCell}${cells}</tr>`;
@@ -141,6 +154,14 @@
       sel.addEventListener("change", e => {
         e.stopPropagation();
         auth.setTag(sel.dataset.symbol, sel.value || null);
+        render();
+      });
+    });
+    body.querySelectorAll(".dir-btn").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const current = auth.getEffectiveDirection(btn.dataset.symbol);
+        auth.setDirection(btn.dataset.symbol, current === btn.dataset.dir ? null : btn.dataset.dir);
         render();
       });
     });

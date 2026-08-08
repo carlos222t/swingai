@@ -14,6 +14,7 @@
   const CURRENT_USER_KEY = "swingai_current_user_v1";
   const UPLOAD_USAGE_KEY = "swingai_upload_usage_v1";
   const PREMIUM_TAGS_KEY = "swingai_premium_tags_v1";
+  const PREMIUM_DIRECTION_KEY = "swingai_premium_direction_v1";
 
   // Client-only admin gate, same caveat as everything else in this file:
   // not tamper-proof, just enough to build/test the owner-only tag-editing
@@ -150,11 +151,28 @@
     return overrides[stock.symbol] || stock.tag || null;
   }
 
+  // ---------- Premium long/short calls (owner-editable) ----------
+  // "long" | "short" | null, stored the same way as tag overrides.
+  function getDirectionOverrides(){
+    try{ return JSON.parse(localStorage.getItem(PREMIUM_DIRECTION_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function setDirection(symbol, direction){
+    const overrides = getDirectionOverrides();
+    if(direction){ overrides[symbol] = direction; }
+    else { delete overrides[symbol]; }
+    localStorage.setItem(PREMIUM_DIRECTION_KEY, JSON.stringify(overrides));
+  }
+  function getEffectiveDirection(symbol){
+    return getDirectionOverrides()[symbol] || null;
+  }
+
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.auth = {
     sha256Hex, getUsers, saveUsers, getCurrentUser, setCurrentUser, clearCurrentUser,
     getPlan, setPlan, hasPremiumAccess,
     getUploadsThisMonth, getUploadLimit, canUpload, recordUpload,
-    isOwner, getTagOverrides, setTag, getEffectiveTag
+    isOwner, getTagOverrides, setTag, getEffectiveTag,
+    getDirectionOverrides, setDirection, getEffectiveDirection
   };
 })();
