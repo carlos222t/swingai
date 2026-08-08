@@ -290,7 +290,12 @@
       price: 842.19, dailyChangePct: -1.72, volume: 2443792, relVol: 0.75,
       marketCap: 387130000000, peRatio: 41.90, epsDilTTM: 20.10, epsDilGrowthYoY: 40.59,
       divYieldPct: 0.73,
-      ema21Close: 868.06, ema50Close: 916.92, weeklyChangePct: 3.36, monthlyChangePct: -10.25 }
+      ema21Close: 868.06, ema50Close: 916.92, weeklyChangePct: 3.36, monthlyChangePct: -10.25 },
+    { symbol: "U", name: "Unity Software Inc.", sector: "Software",
+      price: 43.00, dailyChangePct: 5.37, volume: 18559610, relVol: 1.92,
+      marketCap: 18920000000, peRatio: null, epsDilTTM: -1.36, epsDilGrowthYoY: null,
+      divYieldPct: 0,
+      ema21Close: 32.33, ema50Close: 30.21, weeklyChangePct: 35.60, monthlyChangePct: 39.93 }
   ];
 
   function mapRow(raw){
