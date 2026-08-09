@@ -18,6 +18,18 @@
     return null;
   }
 
+  // Trend read off the same 21/50 EMA structure the rest of the app uses:
+  // price and the 21 below the 50 (both trending down) reads short; price
+  // and the 21 above the 50 (both trending up) reads long; anything mixed
+  // (e.g. a pullback still above a rising 50) isn't a clean read either way.
+  function readTrend(stock){
+    const belowBoth = stock.dist20 < 0 && stock.dist50 < 0;
+    const aboveBoth = stock.dist20 > 0 && stock.dist50 > 0;
+    if(belowBoth && stock.ema21Close < stock.ema50Close) return { cls: "short", label: "Heading short" };
+    if(aboveBoth && stock.ema21Close > stock.ema50Close) return { cls: "long", label: "Heading long" };
+    return { cls: "mixed", label: "Mixed signals" };
+  }
+
   function render(){
     const mount = document.getElementById("stockOfDay");
     if(!mount) return;
@@ -31,12 +43,17 @@
     const weekCls = stock.weeklyChangePct > 0 ? "up" : stock.weeklyChangePct < 0 ? "down" : "";
     const monthCls = stock.monthlyChangePct > 0 ? "up" : stock.monthlyChangePct < 0 ? "down" : "";
     const tag = auth ? tagLabel(auth.getEffectiveTag(stock)) : null;
+    const trend = readTrend(stock);
 
+    mount.className = `stock-of-day trend-${trend.cls}`;
     mount.innerHTML = `
-      <div class="sod-shine"></div>
-      <div class="sod-label"><span class="sod-flame">&#128293;</span> Stock of the Day${tag ? `<span class="sod-tag">${tag}</span>` : ""}</div>
+      <div class="sod-top">
+        <span class="sod-label">Stock of the day</span>
+        ${tag ? `<span class="tag-badge tag-suggested">${tag}</span>` : ""}
+        <span class="tag-badge tag-${trend.cls} sod-trend">${trend.label}</span>
+      </div>
       <div class="sod-main">
-        <span class="sod-avatar" style="background:hsl(${hue} 55% 46%)">${stock.symbol.charAt(0)}</span>
+        <span class="list-avatar" style="background:hsl(${hue} 38% 40%)">${stock.symbol.charAt(0)}</span>
         <div class="sod-id">
           <span class="sod-symbol mono">${stock.symbol}</span>
           <span class="sod-name">${stock.name}</span>
