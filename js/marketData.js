@@ -295,7 +295,12 @@
       price: 43.00, dailyChangePct: 5.37, volume: 18559610, relVol: 1.92,
       marketCap: 18920000000, peRatio: null, epsDilTTM: -1.36, epsDilGrowthYoY: null,
       divYieldPct: 0,
-      ema21Close: 32.33, ema50Close: 30.21, weeklyChangePct: 35.60, monthlyChangePct: 39.93 }
+      ema21Close: 32.33, ema50Close: 30.21, weeklyChangePct: 35.60, monthlyChangePct: 39.93 },
+    { symbol: "KLAC", name: "KLA Corporation", sector: "Semiconductor Equipment",
+      price: 198.11, dailyChangePct: 2.53, volume: 8974090, relVol: 0.69,
+      marketCap: 258840000000, peRatio: 54.01, epsDilTTM: 3.67, epsDilGrowthYoY: 45.82,
+      divYieldPct: 0.47,
+      ema21Close: 203.40, ema50Close: 221.42, weeklyChangePct: 8.36, monthlyChangePct: -13.69 }
   ];
 
   function mapRow(raw){
