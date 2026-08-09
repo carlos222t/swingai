@@ -326,11 +326,22 @@
   function getWatchlistSymbols(){ return PREMIUM_STOCKS.map(s => s.symbol); }
   function getWatchlistStocks(){ return PREMIUM_STOCKS; }
 
+  // ---------- Stock of the Day ----------
+  // A single hand-picked symbol, featured on both Trending and Premium.
+  // Looked up across both lists so it works regardless of which one the
+  // pick actually lives in.
+  const STOCK_OF_DAY_SYMBOL = "WULF";
+  function getStockOfDay(){
+    return TRENDING_STOCKS.find(s => s.symbol === STOCK_OF_DAY_SYMBOL)
+      || PREMIUM_STOCKS.find(s => s.symbol === STOCK_OF_DAY_SYMBOL)
+      || null;
+  }
+
   const ready = Promise.resolve();
 
   window.SwingAI = window.SwingAI || {};
   window.SwingAI.market = {
     getScreenedList, getUniverseSize, getStatus, onUpdate, ready,
-    getWatchlistSymbols, getWatchlistStocks
+    getWatchlistSymbols, getWatchlistStocks, getStockOfDay
   };
 })();
