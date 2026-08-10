@@ -242,10 +242,10 @@
       divYieldPct: 0,
       ema21Close: 364.31, ema50Close: 393.16, weeklyChangePct: 7.21, monthlyChangePct: -7.96 },
     { symbol: "HLT", name: "Hilton Worldwide Holdings Inc.", sector: "Hospitality",
-      price: 317.60, dailyChangePct: -1.36, volume: 1447754, relVol: 0.71,
-      marketCap: 71480000000, peRatio: 46.67, epsDilTTM: 6.81, epsDilGrowthYoY: 11.50,
-      divYieldPct: 0.19,
-      ema21Close: 322.30, ema50Close: 332.36, weeklyChangePct: -0.90, monthlyChangePct: -5.94 },
+      price: 310.90, dailyChangePct: -2.11, volume: 687219, relVol: 0.49,
+      marketCap: 69970000000, peRatio: 45.68, epsDilTTM: 6.81, epsDilGrowthYoY: 11.50,
+      divYieldPct: 0.20,
+      ema21Close: 321.75, ema50Close: 331.84, weeklyChangePct: -1.10, monthlyChangePct: -7.33 },
     { symbol: "FTAI", name: "FTAI Aviation Ltd.", sector: "Aviation",
       price: 216.24, dailyChangePct: -2.26, volume: 1334415, relVol: 1.01,
       marketCap: 22210000000, peRatio: 47.10, epsDilTTM: 4.59, epsDilGrowthYoY: 34.37,
@@ -330,7 +330,7 @@
   // A single hand-picked symbol, featured on both Trending and Premium.
   // Looked up across both lists so it works regardless of which one the
   // pick actually lives in.
-  const STOCK_OF_DAY_SYMBOL = "WULF";
+  const STOCK_OF_DAY_SYMBOL = "HLT";
   function getStockOfDay(){
     return TRENDING_STOCKS.find(s => s.symbol === STOCK_OF_DAY_SYMBOL)
       || PREMIUM_STOCKS.find(s => s.symbol === STOCK_OF_DAY_SYMBOL)
