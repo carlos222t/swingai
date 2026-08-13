@@ -992,3 +992,230 @@ td .cell-edit[type="text"]{width:120px;}
 }
 .paywall-title{font-size:1.05rem;font-weight:800;}
 .paywall-sub{font-size:.86rem;color:var(--text-faint);margin-top:8px;max-width:360px;margin-left:auto;margin-right:auto;}
+
+/* ---------- Journal: toolbar ---------- */
+.journal-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:16px;
+}
+.journal-year-nav{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.journal-year{font-size:1.1rem;font-weight:800;min-width:52px;text-align:center;}
+.year-nav-btn{
+  width:30px;height:30px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text-dim);
+  font-size:1.1rem;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.year-nav-btn:hover{background:var(--surface-3);color:var(--text);}
+.journal-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.journal-settings-btn{margin:0;padding:9px 4px;width:auto;}
+.stats-btn{
+  padding:10px 16px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease;
+}
+.stats-btn:hover{background:var(--surface-3);border-color:var(--border-strong);}
+.add-entry-btn{
+  padding:10px 18px;
+  border:none;
+  border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:filter .15s ease;
+}
+.add-entry-btn:hover{filter:brightness(1.08);}
+
+.journal-legend{display:flex;gap:16px;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--text-faint);font-weight:600;}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+.legend-dot.win{background:var(--good-text);}
+.legend-dot.loss{background:var(--critical-text);}
+
+/* ---------- Journal: year calendar ---------- */
+.journal-calendar{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+@media (max-width:900px){ .journal-calendar{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:560px){ .journal-calendar{grid-template-columns:1fr;} }
+
+.month-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+}
+.month-title{
+  font-size:.82rem;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:10px;
+}
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.month-weekday{
+  font-size:.58rem;
+  font-weight:700;
+  text-align:center;
+  color:var(--text-faint);
+  padding-bottom:2px;
+}
+.day-cell{
+  aspect-ratio:1;
+  border-radius:6px;
+  background:var(--surface-2);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  min-width:0;
+}
+.day-cell.day-blank{background:transparent;}
+.day-cell.has-entries{cursor:pointer;transition:transform .1s ease;}
+.day-cell.has-entries:hover{transform:scale(1.06);}
+.day-cell .day-num{font-size:.6rem;color:var(--text-faint);font-weight:600;}
+.day-cell .day-amt{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:800;
+  font-size:.56rem;
+  white-space:nowrap;
+}
+.day-cell.today{box-shadow:0 0 0 1.5px var(--brand-2) inset;}
+.day-cell.win{background:rgba(12,163,12,.18);border:1px solid rgba(12,163,12,.4);}
+.day-cell.win .day-num,.day-cell.win .day-amt{color:var(--good-text);}
+.day-cell.loss{background:rgba(208,59,59,.18);border:1px solid rgba(208,59,59,.4);}
+.day-cell.loss .day-num,.day-cell.loss .day-amt{color:var(--critical-text);}
+
+/* ---------- Journal: modals ---------- */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(6,7,9,.66);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+.modal-card{
+  width:100%;
+  max-width:380px;
+  max-height:86vh;
+  overflow-y:auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+.modal-card-wide{max-width:480px;}
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.modal-title{font-size:1.02rem;font-weight:800;}
+.modal-close{
+  width:28px;height:28px;
+  border-radius:50%;
+  border:none;
+  background:var(--surface-2);
+  color:var(--text-dim);
+  font-size:1.1rem;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.modal-close:hover{background:var(--surface-3);color:var(--text);}
+.modal-body{display:flex;flex-direction:column;gap:14px;}
+
+.result-toggle{margin-top:2px;}
+.result-toggle .dir-btn{flex:1;padding:9px 10px;text-align:center;}
+
+.day-entry-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:11px 0;
+  border-top:1px solid var(--border);
+}
+.day-entry-row:first-child{border-top:none;padding-top:0;}
+.day-entry-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.day-entry-sym{font-weight:700;font-size:.86rem;}
+.day-entry-tag{font-size:.7rem;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.day-entry-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.day-entry-amt{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:.88rem;}
+.day-entry-amt.win{color:var(--good-text);}
+.day-entry-amt.loss{color:var(--critical-text);}
+.day-entry-remove{
+  width:26px;height:26px;
+  border-radius:50%;
+  border:none;
+  background:var(--surface-2);
+  color:var(--text-faint);
+  font-size:.9rem;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.day-entry-remove:hover{background:rgba(208,59,59,.16);color:var(--critical-text);}
+
+/* ---------- Journal: statistics ---------- */
+.stats-grid{
+  display:flex;
+  flex-direction:column;
+  margin-top:16px;
+}
+.stat-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 0;
+  border-top:1px solid var(--border);
+  font-size:.82rem;
+  color:var(--text-faint);
+  font-weight:600;
+}
+.stat-line:first-child{border-top:none;}
+.stat-line b{
+  color:var(--text);
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:700;
+  font-size:.86rem;
+  text-align:right;
+  white-space:nowrap;
+}
+.stat-line b.pos{color:var(--good-text);}
+.stat-line b.neg{color:var(--critical-text);}

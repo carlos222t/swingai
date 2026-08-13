@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwingAI · Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container container-wide">
+  <div class="topbar">
+    <div class="brand"><span class="brand-logo-chip"><span class="brand-logo-wrap"><img src="assets/logo.png" alt="SwingAI" class="brand-logo"></span></span></div>
+    <nav class="topnav">
+      <a href="trending" class="topnav-link">Trending</a>
+      <a href="journal" class="topnav-link active">Journal</a>
+      <a href="premium" class="topnav-link">Premium<span class="tier-badge" title="Premium plan required">&#128081;</span></a>
+      <div class="profile-menu" id="profileMenu">
+        <a href="signin" class="topnav-link" id="topbarAuthLink">Sign in</a>
+        <div class="profile-dropdown" id="profileDropdown" hidden>
+          <a href="subscription" class="profile-dropdown-item">Upgrade plan</a>
+          <button type="button" class="profile-dropdown-item profile-dropdown-logout" id="logoutBtn">Log out</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="page-title">Trading Journal</div>
+  <div class="page-sub">Track your daily wins and losses across the year.</div>
+
+  <div class="section-divider"></div>
+
+  <div class="journal-toolbar">
+    <div class="journal-year-nav">
+      <button type="button" class="year-nav-btn" id="prevYearBtn" aria-label="Previous year">&lsaquo;</button>
+      <span class="journal-year mono" id="journalYear">2026</span>
+      <button type="button" class="year-nav-btn" id="nextYearBtn" aria-label="Next year">&rsaquo;</button>
+    </div>
+    <div class="journal-actions">
+      <button type="button" class="text-btn journal-settings-btn" id="settingsBtn">Settings</button>
+      <button type="button" class="stats-btn" id="statsBtn">View My Statistics</button>
+      <button type="button" class="add-entry-btn" id="addEntryBtn">+ Add New Entry</button>
+    </div>
+  </div>
+
+  <div class="journal-legend">
+    <span class="legend-item"><i class="legend-dot win"></i>Profit</span>
+    <span class="legend-item"><i class="legend-dot loss"></i>Loss</span>
+  </div>
+
+  <div class="journal-calendar" id="journalCalendar"></div>
+</div>
+
+<!-- Add / Edit Entry Modal -->
+<div class="modal-overlay" id="entryModalOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Add New Entry</div>
+      <button type="button" class="modal-close" id="entryModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="auth-field">
+        <label class="auth-label">Date</label>
+        <input type="date" id="entryDate" class="auth-input">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Stock / Symbol</label>
+        <input type="text" id="entrySymbol" class="auth-input" placeholder="e.g. AAPL" autocomplete="off">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Result</label>
+        <div class="dir-toggle result-toggle" id="resultToggle">
+          <button type="button" class="dir-btn dir-long active" data-result="win">Win</button>
+          <button type="button" class="dir-btn dir-short" data-result="loss">Loss</button>
+        </div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Amount ($)</label>
+        <input type="number" id="entryAmount" class="auth-input" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="auth-error" id="entryError" hidden></div>
+      <button type="button" class="auth-submit" id="entrySaveBtn">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal-overlay" id="dayModalOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="dayModalTitle">Entries</div>
+      <button type="button" class="modal-close" id="dayModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="dayModalBody"></div>
+    <button type="button" class="text-btn" id="dayModalAddBtn">+ Add entry for this day</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModalOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Journal Settings</div>
+      <button type="button" class="modal-close" id="settingsModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="auth-field">
+        <label class="auth-label">Starting Balance ($)</label>
+        <input type="number" id="settingsBalance" class="auth-input" min="0" step="0.01">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Profit Split &mdash; your cut (%)</label>
+        <input type="number" id="settingsSplit" class="auth-input" min="0" max="100" step="0.01" placeholder="e.g. 80">
+      </div>
+      <div class="page-sub" style="margin:0;">If you trade a funded account and they take a cut &mdash; like an 80/20 split &mdash; enter the percentage you keep. Leave at 100 if the account and profits are fully yours.</div>
+      <button type="button" class="auth-submit" id="settingsSaveBtn">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics Modal -->
+<div class="modal-overlay" id="statsModalOverlay" hidden>
+  <div class="modal-card modal-card-wide">
+    <div class="modal-head">
+      <div class="modal-title">My Statistics</div>
+      <button type="button" class="modal-close" id="statsModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="billing-toggle" id="statsPeriodToggle">
+        <button type="button" class="billing-toggle-btn active" data-period="all">All Time</button>
+        <button type="button" class="billing-toggle-btn" data-period="month">This Month</button>
+        <button type="button" class="billing-toggle-btn" data-period="week">This Week</button>
+      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<a href="upload" class="fab-upload" aria-label="Upload a trade">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  <span class="fab-badge" title="Basic plan or higher required">&#128142;</span>
+</a>
+
+<script src="js/auth.js"></script>
+<script src="js/journal.js"></script>
+<script src="js/topbarAuth.js"></script>
+</body>
+</html>
