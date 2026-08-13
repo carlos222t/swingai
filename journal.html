@@ -55,14 +55,20 @@
   <div class="journal-calendar" id="journalCalendar"></div>
 </div>
 
-<!-- Add / Edit Entry Modal -->
+<!-- Add Entry Modal: opens directly from a click on any date -->
 <div class="modal-overlay" id="entryModalOverlay" hidden>
   <div class="modal-card">
     <div class="modal-head">
-      <div class="modal-title">Add New Entry</div>
+      <div class="modal-title" id="entryModalTitle">Add Entry</div>
       <button type="button" class="modal-close" id="entryModalClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="day-entries-wrap" id="dayEntriesWrap" hidden>
+        <div class="day-entries-heading">Already logged on this date</div>
+        <div id="dayEntriesList"></div>
+        <div class="section-divider" style="margin:14px 0 4px;"></div>
+      </div>
+
       <div class="auth-field">
         <label class="auth-label">Date</label>
         <input type="date" id="entryDate" class="auth-input">
@@ -89,18 +95,6 @@
       <div class="auth-error" id="entryError" hidden></div>
       <button type="button" class="auth-submit" id="entrySaveBtn">Save Entry</button>
     </div>
-  </div>
-</div>
-
-<!-- Day Detail Modal -->
-<div class="modal-overlay" id="dayModalOverlay" hidden>
-  <div class="modal-card">
-    <div class="modal-head">
-      <div class="modal-title" id="dayModalTitle">Entries</div>
-      <button type="button" class="modal-close" id="dayModalClose" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body" id="dayModalBody"></div>
-    <button type="button" class="text-btn" id="dayModalAddBtn">+ Add entry for this day</button>
   </div>
 </div>
 

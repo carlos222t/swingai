@@ -1212,6 +1212,14 @@ td .cell-edit[type="text"]{width:120px;}
 }
 .symbol-chip-remove:hover{color:var(--critical-text);}
 
+.day-entries-heading{
+  font-size:.7rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  color:var(--text-faint);
+  margin-bottom:2px;
+}
 .day-entry-row{
   display:flex;
   align-items:center;

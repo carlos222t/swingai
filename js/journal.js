@@ -147,11 +147,10 @@
           const net = dayEntries.reduce((s,e) => s + e.amount, 0);
           cell.classList.add("has-entries", net >= 0 ? "win" : "loss");
           cell.innerHTML = `<span class="day-num">${d}</span><span class="day-amt">${compactAmt(net)}</span>`;
-          cell.addEventListener("click", () => openDayModal(key));
         } else {
           cell.innerHTML = `<span class="day-num">${d}</span>`;
-          cell.addEventListener("click", () => openEntryModal(key));
         }
+        cell.addEventListener("click", () => openEntryModal(key));
         grid.appendChild(cell);
       }
 
@@ -163,8 +162,9 @@
   document.getElementById("prevYearBtn").addEventListener("click", () => { currentYear--; renderCalendar(); });
   document.getElementById("nextYearBtn").addEventListener("click", () => { currentYear++; renderCalendar(); });
 
-  // ---------- Add / Edit Entry modal ----------
+  // ---------- Add Entry modal (opens straight from a click on any date) ----------
   const entryModal = document.getElementById("entryModalOverlay");
+  const entryModalTitle = document.getElementById("entryModalTitle");
   const entryDate = document.getElementById("entryDate");
   const entrySymbol = document.getElementById("entrySymbol");
   const entryAmount = document.getElementById("entryAmount");
@@ -172,6 +172,8 @@
   const resultToggle = document.getElementById("resultToggle");
   const symbolChips = document.getElementById("symbolChips");
   const symbolSaveBtn = document.getElementById("symbolSaveBtn");
+  const dayEntriesWrap = document.getElementById("dayEntriesWrap");
+  const dayEntriesList = document.getElementById("dayEntriesList");
   let entryResult = "win";
 
   function renderSymbolChips(){
@@ -184,14 +186,49 @@
       </span>`).join("");
   }
 
-  function openEntryModal(prefillDate){
-    entryDate.value = prefillDate || todayStr();
+  function dateTitle(dateStr){
+    const [y,m,d] = dateStr.split("-").map(Number);
+    return `${MONTHS[m-1]} ${d}, ${y}`;
+  }
+
+  function renderDayEntries(dateStr){
+    const entries = getEntries().filter(e => e.date === dateStr);
+    entryModalTitle.textContent = entries.length ? `Add Entry — ${dateTitle(dateStr)}` : "Add Entry";
+    if(!entries.length){
+      dayEntriesWrap.hidden = true;
+      dayEntriesList.innerHTML = "";
+      return;
+    }
+    dayEntriesWrap.hidden = false;
+    dayEntriesList.innerHTML = entries.map(e => {
+      const cls = e.amount >= 0 ? "win" : "loss";
+      return `<div class="day-entry-row" data-id="${e.id}">
+        <div class="day-entry-info">
+          <span class="day-entry-sym">${e.symbol}</span>
+          <span class="day-entry-tag">${e.amount >= 0 ? "Win" : "Loss"}</span>
+        </div>
+        <div class="day-entry-right">
+          <span class="day-entry-amt ${cls}">${money(e.amount)}</span>
+          <button type="button" class="day-entry-remove" title="Delete entry" aria-label="Delete entry">&times;</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function resetEntryForm(){
     entrySymbol.value = "";
     entryAmount.value = "";
     entryError.hidden = true;
     entryResult = "win";
     resultToggle.querySelectorAll(".dir-btn").forEach(b => b.classList.toggle("active", b.dataset.result === "win"));
     renderSymbolChips();
+  }
+
+  function openEntryModal(prefillDate){
+    const date = prefillDate || todayStr();
+    entryDate.value = date;
+    resetEntryForm();
+    renderDayEntries(date);
     entryModal.hidden = false;
     entrySymbol.focus();
   }
@@ -200,6 +237,8 @@
   document.getElementById("addEntryBtn").addEventListener("click", () => openEntryModal());
   document.getElementById("entryModalClose").addEventListener("click", closeEntryModal);
   entryModal.addEventListener("click", e => { if(e.target === entryModal) closeEntryModal(); });
+
+  entryDate.addEventListener("change", () => renderDayEntries(entryDate.value));
 
   resultToggle.addEventListener("click", e => {
     const btn = e.target.closest(".dir-btn");
@@ -228,6 +267,15 @@
     entryAmount.focus();
   });
 
+  dayEntriesList.addEventListener("click", e => {
+    const btn = e.target.closest(".day-entry-remove");
+    if(!btn) return;
+    const id = btn.closest(".day-entry-row").dataset.id;
+    setEntries(getEntries().filter(e => e.id !== id));
+    renderDayEntries(entryDate.value);
+    renderCalendar();
+  });
+
   document.getElementById("entrySaveBtn").addEventListener("click", () => {
     const date = entryDate.value;
     const symbol = entrySymbol.value.trim().toUpperCase();
@@ -249,58 +297,13 @@
     setEntries(entries);
     saveSymbol(symbol);
 
-    closeEntryModal();
     currentYear = parseInt(date.slice(0,4), 10);
     renderCalendar();
-  });
 
-  // ---------- Day detail modal ----------
-  const dayModal = document.getElementById("dayModalOverlay");
-  const dayModalTitle = document.getElementById("dayModalTitle");
-  const dayModalBody = document.getElementById("dayModalBody");
-  let openDayKey = null;
-
-  function openDayModal(key){
-    openDayKey = key;
-    const [y,m,d] = key.split("-").map(Number);
-    dayModalTitle.textContent = `${MONTHS[m-1]} ${d}, ${y}`;
-
-    const entries = getEntries().filter(e => e.date === key);
-    dayModalBody.innerHTML = entries.map(e => {
-      const cls = e.amount >= 0 ? "win" : "loss";
-      return `<div class="day-entry-row" data-id="${e.id}">
-        <div class="day-entry-info">
-          <span class="day-entry-sym">${e.symbol}</span>
-          <span class="day-entry-tag">${e.amount >= 0 ? "Win" : "Loss"}</span>
-        </div>
-        <div class="day-entry-right">
-          <span class="day-entry-amt ${cls}">${money(e.amount)}</span>
-          <button type="button" class="day-entry-remove" title="Delete entry" aria-label="Delete entry">&times;</button>
-        </div>
-      </div>`;
-    }).join("") || `<div class="empty-state">No entries yet.</div>`;
-
-    dayModal.hidden = false;
-  }
-  function closeDayModal(){ dayModal.hidden = true; openDayKey = null; }
-
-  document.getElementById("dayModalClose").addEventListener("click", closeDayModal);
-  dayModal.addEventListener("click", e => { if(e.target === dayModal) closeDayModal(); });
-
-  dayModalBody.addEventListener("click", e => {
-    const btn = e.target.closest(".day-entry-remove");
-    if(!btn) return;
-    const row = btn.closest(".day-entry-row");
-    const id = row.dataset.id;
-    setEntries(getEntries().filter(e => e.id !== id));
-    closeDayModal();
-    renderCalendar();
-  });
-
-  document.getElementById("dayModalAddBtn").addEventListener("click", () => {
-    const key = openDayKey;
-    closeDayModal();
-    openEntryModal(key);
+    // Stay open on the same date so several trades can be logged back to back.
+    resetEntryForm();
+    renderDayEntries(date);
+    entrySymbol.focus();
   });
 
   // ---------- Settings modal ----------
