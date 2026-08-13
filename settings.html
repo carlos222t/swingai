@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwingAI · Journal Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="topbar">
+    <a href="journal" class="back-link" aria-label="Back to Journal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div class="brand"><span class="brand-logo-chip"><span class="brand-logo-wrap"><img src="assets/logo.png" alt="SwingAI" class="brand-logo"></span></span></div>
+    <span class="topbar-spacer"></span>
+  </div>
+
+  <div class="page-title">Journal Settings</div>
+  <div class="page-sub">Account size, funded-account profit split, and a look at your performance over time.</div>
+
+  <div class="section-divider"></div>
+
+  <div class="auth-card" style="margin-top:0;">
+    <div class="auth-form" style="margin-top:0;">
+      <div class="auth-field">
+        <label class="auth-label">Starting Balance ($)</label>
+        <input type="number" id="settingsBalance" class="auth-input" min="0" step="0.01">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Profit Split &mdash; your cut (%)</label>
+        <input type="number" id="settingsSplit" class="auth-input" min="0" max="100" step="0.01" placeholder="e.g. 80">
+      </div>
+      <div class="page-sub" style="margin:0;">If you trade a funded account and they take a cut &mdash; like an 80/20 split &mdash; enter the percentage you keep. Leave at 100 if the account and profits are fully yours.</div>
+      <button type="button" class="auth-submit" id="settingsSaveBtn">Save Settings</button>
+      <div class="save-confirm" id="saveConfirm" hidden>Saved.</div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="chart-card" id="winRateCard">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title">Win Rate</div>
+        <div class="chart-sub">All-time, by dollar volume</div>
+      </div>
+    </div>
+    <div class="report-score-block" style="margin-top:0;">
+      <div class="report-score-row">
+        <span class="report-score" id="winRateScore">0%</span>
+      </div>
+      <div class="report-bar"><div class="report-bar-fill" id="winRateBar"></div></div>
+    </div>
+    <div class="report-stats">
+      <div class="stat-row"><span>Win $</span><b id="winDollarStat">$0.00</b></div>
+      <div class="stat-row"><span>Loss $</span><b id="lossDollarStat">$0.00</b></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title">Equity Curve</div>
+        <div class="chart-sub">Cumulative P/L across every logged trade</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="equityChartWrap"></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title">Monthly P/L</div>
+        <div class="chart-sub">Net win/loss per month</div>
+      </div>
+      <div class="chart-nav">
+        <button type="button" class="year-nav-btn" id="chartPrevYear" aria-label="Previous year">&lsaquo;</button>
+        <span id="chartYearLabel" class="mono">2026</span>
+        <button type="button" class="year-nav-btn" id="chartNextYear" aria-label="Next year">&rsaquo;</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="monthlyChartWrap"></div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/journalSettings.js"></script>
+</body>
+</html>

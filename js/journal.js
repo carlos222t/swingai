@@ -41,11 +41,6 @@
     const all = readAllSettings();
     return Object.assign({}, DEFAULT_SETTINGS, all[userId()] || {});
   }
-  function setSettings(settings){
-    const all = readAllSettings();
-    all[userId()] = settings;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(all));
-  }
 
   // ---------- Saved symbols (quick-pick chips) ----------
   function readAllSymbols(){
@@ -407,30 +402,6 @@
     resetEntryForm();
     renderDayEntries(date);
     entrySymbol.focus();
-  });
-
-  // ---------- Settings modal ----------
-  const settingsModal = document.getElementById("settingsModalOverlay");
-  const settingsBalance = document.getElementById("settingsBalance");
-  const settingsSplit = document.getElementById("settingsSplit");
-
-  document.getElementById("settingsBtn").addEventListener("click", () => {
-    const s = getSettings();
-    settingsBalance.value = s.startingBalance;
-    settingsSplit.value = s.profitSplit;
-    settingsModal.hidden = false;
-  });
-  document.getElementById("settingsModalClose").addEventListener("click", () => settingsModal.hidden = true);
-  settingsModal.addEventListener("click", e => { if(e.target === settingsModal) settingsModal.hidden = true; });
-
-  document.getElementById("settingsSaveBtn").addEventListener("click", () => {
-    const balance = parseFloat(settingsBalance.value);
-    const split = parseFloat(settingsSplit.value);
-    setSettings({
-      startingBalance: isFinite(balance) && balance >= 0 ? balance : DEFAULT_SETTINGS.startingBalance,
-      profitSplit: isFinite(split) && split >= 0 && split <= 100 ? split : DEFAULT_SETTINGS.profitSplit
-    });
-    settingsModal.hidden = true;
   });
 
   // ---------- Statistics modal ----------

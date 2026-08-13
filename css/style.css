@@ -352,6 +352,8 @@ a{color:inherit;text-decoration:none;}
 }
 .report-stats .stat-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-faint);}
 .report-stats .stat-row b{color:var(--text);font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.report-stats .stat-row b.pos{color:var(--good-text);}
+.report-stats .stat-row b.neg{color:var(--critical-text);}
 
 .sign-block{margin-top:20px;}
 .sign-heading{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
@@ -1326,3 +1328,60 @@ td .cell-edit[type="text"]{width:120px;}
 }
 .stat-line b.pos{color:var(--good-text);}
 .stat-line b.neg{color:var(--critical-text);}
+
+/* ---------- Journal Settings page: save confirmation + charts ---------- */
+.save-confirm{
+  margin-top:2px;
+  font-size:.8rem;
+  font-weight:700;
+  color:var(--good-text);
+}
+
+.chart-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px 20px;
+  margin-top:20px;
+  box-shadow:var(--shadow-sm);
+}
+.chart-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+.chart-title{font-size:.95rem;font-weight:800;}
+.chart-sub{font-size:.78rem;color:var(--text-faint);margin-top:2px;}
+.chart-nav{display:flex;align-items:center;gap:10px;}
+.chart-nav span{font-weight:700;font-size:.85rem;min-width:40px;text-align:center;}
+
+.chart-wrap{position:relative;width:100%;overflow-x:auto;}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
+
+.chart-tooltip{
+  position:absolute;
+  pointer-events:none;
+  background:var(--surface-3);
+  border:1px solid var(--border-strong);
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:.72rem;
+  line-height:1.4;
+  color:var(--text-dim);
+  box-shadow:var(--shadow-sm);
+  transform:translate(-50%,-115%);
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .1s ease;
+  z-index:5;
+  top:0;
+  left:0;
+}
+.chart-tooltip.show{opacity:1;}
+.chart-tooltip .tt-date{color:var(--text-faint);}
+.chart-tooltip b{font-family:'IBM Plex Mono',monospace;color:var(--text);}
+.chart-tooltip b.tt-pos{color:var(--good-text);}
+.chart-tooltip b.tt-neg{color:var(--critical-text);}
