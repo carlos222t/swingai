@@ -94,73 +94,177 @@
     return sign + Math.round(abs);
   }
 
+  let viewMode = "year"; // "year" | "month" | "week"
   let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  let currentWeekStart = startOfWeek(new Date());
 
   // ---------- Calendar ----------
-  function renderCalendar(){
-    document.getElementById("journalYear").textContent = String(currentYear);
-    const entries = getEntries();
-    const byDate = {};
-    entries.forEach(e => {
-      (byDate[e.date] = byDate[e.date] || []).push(e);
-    });
-
-    const today = todayStr();
-    const wrap = document.getElementById("journalCalendar");
-    wrap.innerHTML = "";
-
-    for(let m = 0; m < 12; m++){
-      const card = document.createElement("div");
-      card.className = "month-card";
-
-      const title = document.createElement("div");
-      title.className = "month-title";
-      title.textContent = MONTHS[m];
-      card.appendChild(title);
-
-      const grid = document.createElement("div");
-      grid.className = "month-grid";
-      WEEKDAYS.forEach(w => {
-        const wd = document.createElement("div");
-        wd.className = "month-weekday";
-        wd.textContent = w;
-        grid.appendChild(wd);
-      });
-
-      const firstDow = new Date(currentYear, m, 1).getDay();
-      const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
-
-      for(let i = 0; i < firstDow; i++){
-        const blank = document.createElement("div");
-        blank.className = "day-cell day-blank";
-        grid.appendChild(blank);
-      }
-
-      for(let d = 1; d <= daysInMonth; d++){
-        const key = dateKey(currentYear, m, d);
-        const dayEntries = byDate[key] || [];
-        const cell = document.createElement("div");
-        cell.className = "day-cell";
-        if(key === today) cell.classList.add("today");
-
-        if(dayEntries.length){
-          const net = dayEntries.reduce((s,e) => s + e.amount, 0);
-          cell.classList.add("has-entries", net >= 0 ? "win" : "loss");
-          cell.innerHTML = `<span class="day-num">${d}</span><span class="day-amt">${compactAmt(net)}</span>`;
-        } else {
-          cell.innerHTML = `<span class="day-num">${d}</span>`;
-        }
-        cell.addEventListener("click", () => openEntryModal(key));
-        grid.appendChild(cell);
-      }
-
-      card.appendChild(grid);
-      wrap.appendChild(card);
-    }
+  function periodLabel(){
+    if(viewMode === "year") return String(currentYear);
+    if(viewMode === "month") return `${MONTHS[currentMonth]} ${currentYear}`;
+    const start = currentWeekStart;
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const startLabel = `${MONTHS[start.getMonth()].slice(0,3)} ${start.getDate()}`;
+    const endLabel = start.getMonth() === end.getMonth() ? `${end.getDate()}` : `${MONTHS[end.getMonth()].slice(0,3)} ${end.getDate()}`;
+    return `${startLabel}–${endLabel}, ${end.getFullYear()}`;
   }
 
-  document.getElementById("prevYearBtn").addEventListener("click", () => { currentYear--; renderCalendar(); });
-  document.getElementById("nextYearBtn").addEventListener("click", () => { currentYear++; renderCalendar(); });
+  function buildDayCell(key, labelHtml, extraClass){
+    const dayEntries = getEntries().filter(e => e.date === key);
+    const cell = document.createElement("div");
+    cell.className = "day-cell" + (extraClass ? " " + extraClass : "");
+    if(key === todayStr()) cell.classList.add("today");
+    let html = labelHtml;
+    if(dayEntries.length){
+      const net = dayEntries.reduce((s,e) => s + e.amount, 0);
+      cell.classList.add("has-entries", net >= 0 ? "win" : "loss");
+      html += `<span class="day-amt">${compactAmt(net)}</span>`;
+    }
+    cell.innerHTML = html;
+    cell.addEventListener("click", () => openEntryModal(key));
+    return cell;
+  }
+
+  function buildMonthCard(y, m, clickableTitle){
+    const card = document.createElement("div");
+    card.className = "month-card";
+
+    const title = document.createElement("div");
+    title.className = "month-title" + (clickableTitle ? " month-title-clickable" : "");
+    title.textContent = MONTHS[m];
+    if(clickableTitle){
+      title.title = `View ${MONTHS[m]}`;
+      title.addEventListener("click", () => switchView("month", { year: y, month: m }));
+    }
+    card.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "month-grid";
+    WEEKDAYS.forEach(w => {
+      const wd = document.createElement("div");
+      wd.className = "month-weekday";
+      wd.textContent = w;
+      grid.appendChild(wd);
+    });
+
+    const firstDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+    for(let i = 0; i < firstDow; i++){
+      const blank = document.createElement("div");
+      blank.className = "day-cell day-blank";
+      grid.appendChild(blank);
+    }
+    for(let d = 1; d <= daysInMonth; d++){
+      const key = dateKey(y, m, d);
+      grid.appendChild(buildDayCell(key, `<span class="day-num">${d}</span>`));
+    }
+
+    card.appendChild(grid);
+    return card;
+  }
+
+  function renderYearView(wrap){
+    for(let m = 0; m < 12; m++){
+      wrap.appendChild(buildMonthCard(currentYear, m, true));
+    }
+  }
+  function renderMonthView(wrap){
+    wrap.appendChild(buildMonthCard(currentYear, currentMonth, false));
+  }
+  function renderWeekView(wrap){
+    const strip = document.createElement("div");
+    strip.className = "week-strip";
+    for(let i = 0; i < 7; i++){
+      const d = new Date(currentWeekStart);
+      d.setDate(currentWeekStart.getDate() + i);
+      const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      const labelHtml = `<span class="week-day-name">${WEEKDAYS[d.getDay()]} ${MONTHS[d.getMonth()].slice(0,3)}</span><span class="day-num">${d.getDate()}</span>`;
+      strip.appendChild(buildDayCell(key, labelHtml, "day-cell-week"));
+    }
+    wrap.appendChild(strip);
+  }
+
+  function computePL(){
+    const entries = getEntries();
+    let filtered;
+    if(viewMode === "year"){
+      filtered = entries.filter(e => e.date.slice(0,4) === String(currentYear));
+    } else if(viewMode === "month"){
+      const ym = `${currentYear}-${String(currentMonth+1).padStart(2,"0")}`;
+      filtered = entries.filter(e => e.date.slice(0,7) === ym);
+    } else {
+      const start = currentWeekStart;
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23,59,59,999);
+      filtered = entries.filter(e => {
+        const d = new Date(e.date + "T00:00:00");
+        return d >= start && d <= end;
+      });
+    }
+    return filtered.reduce((s,e) => s + e.amount, 0);
+  }
+  function signedMoney(n){
+    return (n < 0 ? "-" : "+") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function renderPL(){
+    const net = computePL();
+    const badge = document.getElementById("plBadge");
+    badge.textContent = signedMoney(net);
+    badge.classList.toggle("pos", net >= 0);
+    badge.classList.toggle("neg", net < 0);
+  }
+
+  function render(){
+    document.getElementById("journalPeriodLabel").textContent = periodLabel();
+    const wrap = document.getElementById("journalCalendar");
+    wrap.className = "journal-calendar view-" + viewMode;
+    wrap.innerHTML = "";
+    if(viewMode === "year") renderYearView(wrap);
+    else if(viewMode === "month") renderMonthView(wrap);
+    else renderWeekView(wrap);
+    renderPL();
+  }
+
+  function switchView(mode, opts){
+    viewMode = mode;
+    if(opts){
+      if(opts.year != null) currentYear = opts.year;
+      if(opts.month != null) currentMonth = opts.month;
+    }
+    document.querySelectorAll("#viewToggle .billing-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.view === mode));
+    render();
+  }
+
+  document.getElementById("viewToggle").addEventListener("click", e => {
+    const btn = e.target.closest("[data-view]");
+    if(!btn) return;
+    switchView(btn.dataset.view);
+  });
+
+  document.getElementById("prevBtn").addEventListener("click", () => {
+    if(viewMode === "year") currentYear--;
+    else if(viewMode === "month"){
+      currentMonth--;
+      if(currentMonth < 0){ currentMonth = 11; currentYear--; }
+    } else {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    }
+    render();
+  });
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if(viewMode === "year") currentYear++;
+    else if(viewMode === "month"){
+      currentMonth++;
+      if(currentMonth > 11){ currentMonth = 0; currentYear++; }
+    } else {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+    render();
+  });
 
   // ---------- Add Entry modal (opens straight from a click on any date) ----------
   const entryModal = document.getElementById("entryModalOverlay");
@@ -273,7 +377,7 @@
     const id = btn.closest(".day-entry-row").dataset.id;
     setEntries(getEntries().filter(e => e.id !== id));
     renderDayEntries(entryDate.value);
-    renderCalendar();
+    render();
   });
 
   document.getElementById("entrySaveBtn").addEventListener("click", () => {
@@ -297,8 +401,7 @@
     setEntries(entries);
     saveSymbol(symbol);
 
-    currentYear = parseInt(date.slice(0,4), 10);
-    renderCalendar();
+    render();
 
     // Stay open on the same date so several trades can be logged back to back.
     resetEntryForm();
@@ -439,5 +542,5 @@
     renderStats();
   });
 
-  renderCalendar();
+  render();
 })();

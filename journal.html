@@ -35,13 +35,21 @@
   <div class="section-divider"></div>
 
   <div class="journal-toolbar">
-    <div class="journal-year-nav">
-      <button type="button" class="year-nav-btn" id="prevYearBtn" aria-label="Previous year">&lsaquo;</button>
-      <span class="journal-year mono" id="journalYear">2026</span>
-      <button type="button" class="year-nav-btn" id="nextYearBtn" aria-label="Next year">&rsaquo;</button>
+    <div class="journal-toolbar-left">
+      <div class="billing-toggle journal-view-toggle" id="viewToggle">
+        <button type="button" class="billing-toggle-btn active" data-view="year">Year</button>
+        <button type="button" class="billing-toggle-btn" data-view="month">Month</button>
+        <button type="button" class="billing-toggle-btn" data-view="week">Week</button>
+      </div>
+      <div class="journal-year-nav">
+        <button type="button" class="year-nav-btn" id="prevBtn" aria-label="Previous">&lsaquo;</button>
+        <span class="journal-year mono" id="journalPeriodLabel">2026</span>
+        <button type="button" class="year-nav-btn" id="nextBtn" aria-label="Next">&rsaquo;</button>
+      </div>
     </div>
     <div class="journal-actions">
       <button type="button" class="text-btn journal-settings-btn" id="settingsBtn">Settings</button>
+      <span class="pl-badge" id="plBadge">$0.00</span>
       <button type="button" class="stats-btn" id="statsBtn">View My Statistics</button>
       <button type="button" class="add-entry-btn" id="addEntryBtn">+ Add New Entry</button>
     </div>
