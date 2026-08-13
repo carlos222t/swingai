@@ -8,6 +8,7 @@
 
   const ENTRIES_KEY = "swingai_journal_entries_v1";
   const SETTINGS_KEY = "swingai_journal_settings_v1";
+  const SYMBOLS_KEY = "swingai_journal_symbols_v1";
   const DEFAULT_SETTINGS = { startingBalance: 10000, profitSplit: 100 };
 
   const WEEKDAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
@@ -44,6 +45,31 @@
     const all = readAllSettings();
     all[userId()] = settings;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(all));
+  }
+
+  // ---------- Saved symbols (quick-pick chips) ----------
+  function readAllSymbols(){
+    try{ return JSON.parse(localStorage.getItem(SYMBOLS_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function getSavedSymbols(){
+    const all = readAllSymbols();
+    return all[userId()] || [];
+  }
+  function saveSymbol(symbol){
+    symbol = symbol.trim().toUpperCase();
+    if(!symbol) return;
+    const list = getSavedSymbols();
+    if(list.includes(symbol)) return;
+    list.push(symbol);
+    const all = readAllSymbols();
+    all[userId()] = list;
+    localStorage.setItem(SYMBOLS_KEY, JSON.stringify(all));
+  }
+  function removeSavedSymbol(symbol){
+    const all = readAllSymbols();
+    all[userId()] = getSavedSymbols().filter(s => s !== symbol);
+    localStorage.setItem(SYMBOLS_KEY, JSON.stringify(all));
   }
 
   function todayStr(){
@@ -124,6 +150,7 @@
           cell.addEventListener("click", () => openDayModal(key));
         } else {
           cell.innerHTML = `<span class="day-num">${d}</span>`;
+          cell.addEventListener("click", () => openEntryModal(key));
         }
         grid.appendChild(cell);
       }
@@ -143,7 +170,19 @@
   const entryAmount = document.getElementById("entryAmount");
   const entryError = document.getElementById("entryError");
   const resultToggle = document.getElementById("resultToggle");
+  const symbolChips = document.getElementById("symbolChips");
+  const symbolSaveBtn = document.getElementById("symbolSaveBtn");
   let entryResult = "win";
+
+  function renderSymbolChips(){
+    const current = entrySymbol.value.trim().toUpperCase();
+    const saved = getSavedSymbols();
+    symbolChips.innerHTML = saved.map(sym => `
+      <span class="symbol-chip${sym === current ? " active" : ""}" data-symbol="${sym}">
+        <span class="symbol-chip-label">${sym}</span>
+        <button type="button" class="symbol-chip-remove" data-symbol="${sym}" title="Remove ${sym}" aria-label="Remove ${sym}">&times;</button>
+      </span>`).join("");
+  }
 
   function openEntryModal(prefillDate){
     entryDate.value = prefillDate || todayStr();
@@ -152,6 +191,7 @@
     entryError.hidden = true;
     entryResult = "win";
     resultToggle.querySelectorAll(".dir-btn").forEach(b => b.classList.toggle("active", b.dataset.result === "win"));
+    renderSymbolChips();
     entryModal.hidden = false;
     entrySymbol.focus();
   }
@@ -166,6 +206,26 @@
     if(!btn) return;
     entryResult = btn.dataset.result;
     resultToggle.querySelectorAll(".dir-btn").forEach(b => b.classList.toggle("active", b === btn));
+  });
+
+  symbolSaveBtn.addEventListener("click", () => {
+    saveSymbol(entrySymbol.value);
+    renderSymbolChips();
+  });
+  entrySymbol.addEventListener("input", renderSymbolChips);
+
+  symbolChips.addEventListener("click", e => {
+    const removeBtn = e.target.closest(".symbol-chip-remove");
+    if(removeBtn){
+      removeSavedSymbol(removeBtn.dataset.symbol);
+      renderSymbolChips();
+      return;
+    }
+    const chip = e.target.closest(".symbol-chip");
+    if(!chip) return;
+    entrySymbol.value = chip.dataset.symbol;
+    renderSymbolChips();
+    entryAmount.focus();
   });
 
   document.getElementById("entrySaveBtn").addEventListener("click", () => {
@@ -187,6 +247,7 @@
       amount: entryResult === "win" ? amount : -amount
     });
     setEntries(entries);
+    saveSymbol(symbol);
 
     closeEntryModal();
     currentYear = parseInt(date.slice(0,4), 10);

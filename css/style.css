@@ -1100,8 +1100,8 @@ td .cell-edit[type="text"]{width:120px;}
   min-width:0;
 }
 .day-cell.day-blank{background:transparent;}
-.day-cell.has-entries{cursor:pointer;transition:transform .1s ease;}
-.day-cell.has-entries:hover{transform:scale(1.06);}
+.day-cell:not(.day-blank){cursor:pointer;transition:transform .1s ease;}
+.day-cell:not(.day-blank):hover{transform:scale(1.06);}
 .day-cell .day-num{font-size:.6rem;color:var(--text-faint);font-weight:600;}
 .day-cell .day-amt{
   font-family:'IBM Plex Mono',monospace;
@@ -1161,6 +1161,56 @@ td .cell-edit[type="text"]{width:120px;}
 
 .result-toggle{margin-top:2px;}
 .result-toggle .dir-btn{flex:1;padding:9px 10px;text-align:center;}
+
+.symbol-input-row{display:flex;gap:8px;}
+.symbol-input-row .auth-input{flex:1;}
+.symbol-save-btn{
+  flex-shrink:0;
+  width:44px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text-dim);
+  font-size:1.1rem;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.symbol-save-btn:hover{background:var(--surface-3);color:var(--text);border-color:var(--border-strong);}
+.symbol-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.symbol-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 6px 5px 12px;
+  border-radius:999px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text-dim);
+  font-size:.74rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
+}
+.symbol-chip:hover{background:var(--surface-3);border-color:var(--border-strong);color:var(--text);}
+.symbol-chip.active{background:rgba(57,135,229,.16);border-color:var(--brand-2);color:var(--brand-2);}
+.symbol-chip-remove{
+  width:16px;height:16px;
+  border-radius:50%;
+  border:none;
+  background:none;
+  color:var(--text-faint);
+  font-size:.8rem;
+  line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.symbol-chip-remove:hover{color:var(--critical-text);}
 
 .day-entry-row{
   display:flex;
