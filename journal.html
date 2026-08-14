@@ -50,7 +50,7 @@
     <div class="journal-actions">
       <a href="settings" class="text-btn journal-settings-btn">Settings</a>
       <span class="pl-badge" id="plBadge">$0.00</span>
-      <button type="button" class="stats-btn" id="statsBtn">View My Statistics</button>
+      <a href="statistics" class="stats-btn">View My Statistics</a>
       <button type="button" class="add-entry-btn" id="addEntryBtn">+ Add New Entry</button>
     </div>
   </div>
@@ -106,23 +106,6 @@
   </div>
 </div>
 
-<!-- Statistics Modal -->
-<div class="modal-overlay" id="statsModalOverlay" hidden>
-  <div class="modal-card modal-card-wide">
-    <div class="modal-head">
-      <div class="modal-title">My Statistics</div>
-      <button type="button" class="modal-close" id="statsModalClose" aria-label="Close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="billing-toggle" id="statsPeriodToggle">
-        <button type="button" class="billing-toggle-btn active" data-period="all">All Time</button>
-        <button type="button" class="billing-toggle-btn" data-period="month">This Month</button>
-        <button type="button" class="billing-toggle-btn" data-period="week">This Week</button>
-      </div>
-      <div class="stats-grid" id="statsGrid"></div>
-    </div>
-  </div>
-</div>
 
 <a href="upload" class="fab-upload" aria-label="Upload a trade">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>

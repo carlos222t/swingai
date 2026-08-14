@@ -7,9 +7,7 @@
   const auth = window.SwingAI.auth;
 
   const ENTRIES_KEY = "swingai_journal_entries_v1";
-  const SETTINGS_KEY = "swingai_journal_settings_v1";
   const SYMBOLS_KEY = "swingai_journal_symbols_v1";
-  const DEFAULT_SETTINGS = { startingBalance: 10000, profitSplit: 100 };
 
   const WEEKDAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -31,15 +29,6 @@
     const all = readAllEntries();
     all[userId()] = list;
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(all));
-  }
-
-  function readAllSettings(){
-    try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); }
-    catch(e){ return {}; }
-  }
-  function getSettings(){
-    const all = readAllSettings();
-    return Object.assign({}, DEFAULT_SETTINGS, all[userId()] || {});
   }
 
   // ---------- Saved symbols (quick-pick chips) ----------
@@ -74,10 +63,6 @@
   function dateKey(y,m,d){
     return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   }
-  function dmy(dateStr){
-    const [y,m,d] = dateStr.split("-");
-    return `${d}/${m}/${y}`;
-  }
   function money(n){
     const sign = n < 0 ? "-" : "";
     return sign + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -87,6 +72,14 @@
     const abs = Math.abs(n);
     if(abs >= 1000) return sign + (abs/1000).toFixed(abs >= 10000 ? 0 : 1) + "k";
     return sign + Math.round(abs);
+  }
+  function startOfWeek(d){
+    const day = d.getDay(); // 0 = Sunday
+    const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diff);
+    monday.setHours(0,0,0,0);
+    return monday;
   }
 
   let viewMode = "year"; // "year" | "month" | "week"
@@ -402,115 +395,6 @@
     resetEntryForm();
     renderDayEntries(date);
     entrySymbol.focus();
-  });
-
-  // ---------- Statistics modal ----------
-  const statsModal = document.getElementById("statsModalOverlay");
-  const statsGrid = document.getElementById("statsGrid");
-  const statsPeriodToggle = document.getElementById("statsPeriodToggle");
-  let statsPeriod = "all";
-
-  function startOfWeek(d){
-    const day = d.getDay(); // 0 = Sunday
-    const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
-    const monday = new Date(d);
-    monday.setDate(d.getDate() + diff);
-    monday.setHours(0,0,0,0);
-    return monday;
-  }
-
-  function filterByPeriod(entries, period){
-    if(period === "all") return entries;
-    const now = new Date();
-    if(period === "month"){
-      return entries.filter(e => {
-        const d = new Date(e.date + "T00:00:00");
-        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-      });
-    }
-    // week
-    const monday = startOfWeek(now);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23,59,59,999);
-    return entries.filter(e => {
-      const d = new Date(e.date + "T00:00:00");
-      return d >= monday && d <= sunday;
-    });
-  }
-
-  function computeStats(period){
-    const all = getEntries();
-    const entries = filterByPeriod(all, period);
-    const settings = getSettings();
-
-    const wins = entries.filter(e => e.amount > 0);
-    const losses = entries.filter(e => e.amount < 0);
-    const totalWins = wins.reduce((s,e) => s + e.amount, 0);
-    const totalLosses = losses.reduce((s,e) => s + Math.abs(e.amount), 0);
-    const net = totalWins - totalLosses;
-    const balance = settings.startingBalance;
-    const pctOfBalance = balance > 0 ? (net / balance) * 100 : 0;
-    const totalOrders = totalWins + totalLosses;
-    const winRate = totalOrders > 0 ? (totalWins / totalOrders) * 100 : 0;
-    const netEarning = net * (settings.profitSplit / 100);
-
-    let periodStart = "—", periodEnd = "—", weeks = 0;
-    if(entries.length){
-      const dates = entries.map(e => e.date).sort();
-      periodStart = dates[0];
-      periodEnd = dates[dates.length - 1];
-      const days = (new Date(periodEnd + "T00:00:00") - new Date(periodStart + "T00:00:00")) / 86400000;
-      weeks = days / 7;
-    }
-
-    return {
-      totalWins, totalLosses, net, balance, pctOfBalance, totalOrders, winRate,
-      winEntries: wins.length, lossEntries: losses.length, totalEntries: entries.length,
-      netEarning, periodStart, periodEnd, weeks
-    };
-  }
-
-  function renderStats(){
-    const s = computeStats(statsPeriod);
-    const line = (label, value, cls) => `<div class="stat-line"><span>${label}</span><b${cls ? ` class="${cls}"` : ""}>${value}</b></div>`;
-    const netCls = s.net >= 0 ? "pos" : "neg";
-    const netEarnCls = s.netEarning >= 0 ? "pos" : "neg";
-
-    statsGrid.innerHTML = [
-      line("Total Wins", money(s.totalWins), "pos"),
-      line("Total Losses", money(s.totalLosses), s.totalLosses > 0 ? "neg" : ""),
-      line("Net (Wins - Losses)", money(s.net), netCls),
-      line("Balance", money(s.balance)),
-      line("% of Balance", s.pctOfBalance.toFixed(2) + "%", netCls),
-      line("Total Orders", money(s.totalOrders)),
-      line("Win Rate", s.winRate.toFixed(2) + "%"),
-      line("Win Entries", s.winEntries, "pos"),
-      line("Loss Entries", s.lossEntries, s.lossEntries > 0 ? "neg" : ""),
-      line("Total Entries", s.totalEntries),
-      line("Net Earning", money(s.netEarning), netEarnCls),
-      line("Period of Time", s.periodStart === "—" ? "—" : `${dmy(s.periodStart)} - ${dmy(s.periodEnd)}`),
-      line("Start Date", s.periodStart === "—" ? "—" : dmy(s.periodStart)),
-      line("End Date", s.periodEnd === "—" ? "—" : dmy(s.periodEnd)),
-      line("Time (Weeks)", s.weeks.toFixed(2))
-    ].join("");
-  }
-
-  document.getElementById("statsBtn").addEventListener("click", () => {
-    statsPeriod = "all";
-    statsPeriodToggle.querySelectorAll(".billing-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.period === "all"));
-    renderStats();
-    statsModal.hidden = false;
-  });
-  document.getElementById("statsModalClose").addEventListener("click", () => statsModal.hidden = true);
-  statsModal.addEventListener("click", e => { if(e.target === statsModal) statsModal.hidden = true; });
-
-  statsPeriodToggle.addEventListener("click", e => {
-    const btn = e.target.closest(".billing-toggle-btn");
-    if(!btn) return;
-    statsPeriod = btn.dataset.period;
-    statsPeriodToggle.querySelectorAll(".billing-toggle-btn").forEach(b => b.classList.toggle("active", b === btn));
-    renderStats();
   });
 
   render();

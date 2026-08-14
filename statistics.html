@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwingAI · Statistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container container-wide">
+  <div class="topbar">
+    <a href="journal" class="back-link" aria-label="Back to Journal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div class="brand"><span class="brand-logo-chip"><span class="brand-logo-wrap"><img src="assets/logo.png" alt="SwingAI" class="brand-logo"></span></span></div>
+    <span class="topbar-spacer"></span>
+  </div>
+
+  <div class="page-title">My Statistics</div>
+  <div class="page-sub">Every number from your journal, broken out into its own chart.</div>
+
+  <div class="section-divider"></div>
+
+  <div class="billing-toggle" id="statsPeriodToggle">
+    <button type="button" class="billing-toggle-btn active" data-period="all">All Time</button>
+    <button type="button" class="billing-toggle-btn" data-period="month">This Month</button>
+    <button type="button" class="billing-toggle-btn" data-period="week">This Week</button>
+  </div>
+
+  <div class="stat-cat-grid">
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Net P/L</div>
+          <div class="chart-sub">Wins vs. losses</div>
+        </div>
+      </div>
+      <div class="cat-headline" id="netHeadline">$0.00</div>
+      <div class="compare-bars" id="winLossBars"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Win Rate</div>
+          <div class="chart-sub">By dollar volume</div>
+        </div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-svg" id="winRateGauge"></div>
+        <div class="gauge-side-stats" id="winRateSideStats"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Account Performance</div>
+          <div class="chart-sub">Net vs. starting balance</div>
+        </div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-svg" id="balanceGauge"></div>
+        <div class="gauge-side-stats" id="balanceSideStats"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Trade Volume</div>
+          <div class="chart-sub">Total dollars traded</div>
+        </div>
+      </div>
+      <div class="cat-headline" id="volumeHeadline">$0.00</div>
+      <div class="stacked-bar" id="volumeStackedBar"></div>
+      <div class="stacked-legend" id="volumeLegend"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Net Earning</div>
+          <div class="chart-sub" id="netEarningSub">After your profit split</div>
+        </div>
+      </div>
+      <div class="cat-headline" id="netEarningHeadline">$0.00</div>
+      <div class="compare-bars" id="netEarningBars"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Entries</div>
+          <div class="chart-sub">Win vs. loss count</div>
+        </div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-svg" id="entriesGauge"></div>
+        <div class="gauge-side-stats" id="entriesSideStats"></div>
+      </div>
+    </div>
+
+    <div class="chart-card stat-cat-wide">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Timeline</div>
+          <div class="chart-sub">Cumulative P/L across the selected period</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="timelineChartWrap"></div>
+      <div class="stats-grid" id="timelineStats"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/statisticsPage.js"></script>
+</body>
+</html>
