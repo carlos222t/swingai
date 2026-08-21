@@ -4,6 +4,7 @@
 (function(){
   "use strict";
   const auth = window.SwingAI.auth;
+  const accountsApi = window.SwingAI.journalAccounts;
 
   const ENTRIES_KEY = "swingai_journal_entries_v1";
   const SETTINGS_KEY = "swingai_journal_settings_v1";
@@ -14,23 +15,35 @@
     const user = auth.getCurrentUser();
     return user ? user.email : "anonymous";
   }
+  // Settings are per account, keyed "<userId>::<accountId>". Entries saved
+  // before multi-account support existed have no accountId and fall back
+  // to the default account; settings do the same fallback so an existing
+  // user's numbers don't reset to the defaults the first time they load
+  // this page post-upgrade.
+  function settingsKey(){
+    return userId() + "::" + accountsApi.getActiveAccountId();
+  }
   function getEntries(){
     try{
       const all = JSON.parse(localStorage.getItem(ENTRIES_KEY) || "{}");
-      return all[userId()] || [];
+      const list = all[userId()] || [];
+      const accountId = accountsApi.getActiveAccountId();
+      return list.filter(e => (e.accountId || accountsApi.DEFAULT_ACCOUNT_ID) === accountId);
     } catch(e){ return []; }
   }
   function getSettings(){
     try{
       const all = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
-      return Object.assign({}, DEFAULT_SETTINGS, all[userId()] || {});
+      const accountId = accountsApi.getActiveAccountId();
+      const legacy = accountId === accountsApi.DEFAULT_ACCOUNT_ID ? all[userId()] : undefined;
+      return Object.assign({}, DEFAULT_SETTINGS, all[settingsKey()] || legacy || {});
     } catch(e){ return Object.assign({}, DEFAULT_SETTINGS); }
   }
   function setSettings(settings){
     let all;
     try{ all = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); }
     catch(e){ all = {}; }
-    all[userId()] = settings;
+    all[settingsKey()] = settings;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(all));
   }
 
@@ -251,6 +264,15 @@
   document.getElementById("chartPrevYear").addEventListener("click", () => { chartYear--; buildMonthlyChart(); });
   document.getElementById("chartNextYear").addEventListener("click", () => { chartYear++; buildMonthlyChart(); });
 
+  // ---------- Active-account label (editing accounts happens on the Journal page) ----------
+  function renderAccountLabel(){
+    const label = document.getElementById("settingsAccountLabel");
+    if(!label) return;
+    const account = accountsApi.getActiveAccount();
+    label.textContent = account ? account.name : "";
+  }
+
+  renderAccountLabel();
   loadSettingsForm();
   buildWinRate();
   buildEquityChart();

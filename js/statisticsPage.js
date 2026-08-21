@@ -5,6 +5,7 @@
 (function(){
   "use strict";
   const auth = window.SwingAI.auth;
+  const accountsApi = window.SwingAI.journalAccounts;
 
   const ENTRIES_KEY = "swingai_journal_entries_v1";
   const SETTINGS_KEY = "swingai_journal_settings_v1";
@@ -15,16 +16,22 @@
     const user = auth.getCurrentUser();
     return user ? user.email : "anonymous";
   }
+  // Same per-account scoping (with legacy default-account fallback) as
+  // js/journalSettings.js — keep both in sync if this logic changes.
   function getEntries(){
     try{
       const all = JSON.parse(localStorage.getItem(ENTRIES_KEY) || "{}");
-      return all[userId()] || [];
+      const list = all[userId()] || [];
+      const accountId = accountsApi.getActiveAccountId();
+      return list.filter(e => (e.accountId || accountsApi.DEFAULT_ACCOUNT_ID) === accountId);
     } catch(e){ return []; }
   }
   function getSettings(){
     try{
       const all = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
-      return Object.assign({}, DEFAULT_SETTINGS, all[userId()] || {});
+      const accountId = accountsApi.getActiveAccountId();
+      const legacy = accountId === accountsApi.DEFAULT_ACCOUNT_ID ? all[userId()] : undefined;
+      return Object.assign({}, DEFAULT_SETTINGS, all[userId() + "::" + accountId] || legacy || {});
     } catch(e){ return Object.assign({}, DEFAULT_SETTINGS); }
   }
 
@@ -319,5 +326,14 @@
     renderAll();
   });
 
+  // ---------- Active-account label (editing accounts happens on the Journal page) ----------
+  function renderAccountLabel(){
+    const label = document.getElementById("statsAccountLabel");
+    if(!label) return;
+    const account = accountsApi.getActiveAccount();
+    label.textContent = account ? account.name : "";
+  }
+
+  renderAccountLabel();
   renderAll();
 })();

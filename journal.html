@@ -36,6 +36,20 @@
 
   <div class="journal-toolbar">
     <div class="journal-toolbar-left">
+      <div class="account-switcher" id="accountSwitcher">
+        <button type="button" class="account-switcher-btn" id="accountSwitcherBtn">
+          <span id="accountSwitcherLabel">Main Account</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="account-switcher-chevron"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="account-dropdown" id="accountDropdown" hidden>
+          <div class="account-dropdown-list" id="accountDropdownList"></div>
+          <div class="section-divider" style="margin:8px 0;"></div>
+          <div class="account-add-row">
+            <input type="text" id="newAccountName" class="account-add-input" placeholder="New account name" autocomplete="off" maxlength="40">
+            <button type="button" class="symbol-save-btn" id="addAccountBtn" title="Add account" aria-label="Add account">&#43;</button>
+          </div>
+        </div>
+      </div>
       <div class="billing-toggle journal-view-toggle" id="viewToggle">
         <button type="button" class="billing-toggle-btn active" data-view="year">Year</button>
         <button type="button" class="billing-toggle-btn" data-view="month">Month</button>
@@ -113,6 +127,7 @@
 </a>
 
 <script src="js/auth.js"></script>
+<script src="js/journalAccounts.js"></script>
 <script src="js/journal.js"></script>
 <script src="js/topbarAuth.js"></script>
 </body>

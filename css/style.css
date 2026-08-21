@@ -1010,6 +1010,105 @@ td .cell-edit[type="text"]{width:120px;}
   gap:18px;
   flex-wrap:wrap;
 }
+
+/* ---------- Journal: account switcher ---------- */
+.account-switcher{position:relative;}
+.account-switcher-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  max-width:220px;
+  transition:background .15s ease, border-color .15s ease;
+}
+.account-switcher-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.account-switcher-btn:hover{background:var(--surface-3);border-color:var(--border-strong);}
+.account-switcher-chevron{width:14px;height:14px;flex:none;color:var(--text-faint);}
+.account-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  min-width:240px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);
+  padding:8px;
+  z-index:20;
+}
+.account-dropdown-list{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;}
+.account-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  border-radius:8px;
+  transition:background .15s ease;
+}
+.account-row:hover{background:var(--surface-2);}
+.account-row.active .account-row-name{color:var(--brand-2);}
+.account-row-name{
+  flex:1;
+  text-align:left;
+  padding:9px 10px;
+  border:none;
+  background:none;
+  color:var(--text-dim);
+  font-family:'Inter',sans-serif;
+  font-size:.82rem;
+  font-weight:600;
+  cursor:pointer;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.account-row-actions{display:flex;align-items:center;gap:2px;padding-right:6px;}
+.account-row-btn{
+  width:22px;height:22px;
+  border-radius:50%;
+  border:none;
+  background:none;
+  color:var(--text-faint);
+  font-size:.8rem;
+  line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.account-row-btn:hover{background:var(--surface-3);color:var(--text);}
+.account-row-btn.account-row-delete:hover{color:var(--critical-text);background:rgba(208,59,59,.16);}
+.account-row-editing{padding:2px 0;}
+.account-rename-input{
+  width:100%;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid var(--brand-2);
+  background:var(--surface-2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:.82rem;
+  font-weight:600;
+}
+.account-add-row{display:flex;align-items:center;gap:6px;}
+.account-add-input{
+  flex:1;
+  padding:9px 10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:.8rem;
+}
+.account-add-input:focus{outline:none;border-color:var(--brand-2);}
 .journal-year-nav{
   display:flex;
   align-items:center;

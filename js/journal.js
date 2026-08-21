@@ -5,6 +5,7 @@
 (function(){
   "use strict";
   const auth = window.SwingAI.auth;
+  const accountsApi = window.SwingAI.journalAccounts;
 
   const ENTRIES_KEY = "swingai_journal_entries_v1";
   const SYMBOLS_KEY = "swingai_journal_symbols_v1";
@@ -21,14 +22,32 @@
     try{ return JSON.parse(localStorage.getItem(ENTRIES_KEY) || "{}"); }
     catch(e){ return {}; }
   }
-  function getEntries(){
+  // Every entry for this user, across all of their accounts.
+  function getAllEntries(){
     const all = readAllEntries();
     return all[userId()] || [];
   }
-  function setEntries(list){
+  function setAllEntries(list){
     const all = readAllEntries();
     all[userId()] = list;
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(all));
+  }
+  // Entries for the currently active account only — what the calendar and
+  // P/L math should actually see. Entries saved before multi-account
+  // support existed have no accountId, so they fall back to the default
+  // account rather than disappearing.
+  function getEntries(){
+    const accountId = accountsApi.getActiveAccountId();
+    return getAllEntries().filter(e => (e.accountId || accountsApi.DEFAULT_ACCOUNT_ID) === accountId);
+  }
+  function addEntry(entry){
+    entry.accountId = accountsApi.getActiveAccountId();
+    const list = getAllEntries();
+    list.push(entry);
+    setAllEntries(list);
+  }
+  function removeEntry(id){
+    setAllEntries(getAllEntries().filter(e => e.id !== id));
   }
 
   // ---------- Saved symbols (quick-pick chips) ----------
@@ -215,6 +234,11 @@
     else if(viewMode === "month") renderMonthView(wrap);
     else renderWeekView(wrap);
     renderPL();
+    const label = document.getElementById("accountSwitcherLabel");
+    if(label){
+      const active = accountsApi.getActiveAccount();
+      label.textContent = active ? active.name : "Account";
+    }
   }
 
   function switchView(mode, opts){
@@ -363,7 +387,7 @@
     const btn = e.target.closest(".day-entry-remove");
     if(!btn) return;
     const id = btn.closest(".day-entry-row").dataset.id;
-    setEntries(getEntries().filter(e => e.id !== id));
+    removeEntry(id);
     renderDayEntries(entryDate.value);
     render();
   });
@@ -379,14 +403,12 @@
       return;
     }
 
-    const entries = getEntries();
-    entries.push({
+    addEntry({
       id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
       date,
       symbol,
       amount: entryResult === "win" ? amount : -amount
     });
-    setEntries(entries);
     saveSymbol(symbol);
 
     render();
@@ -396,6 +418,118 @@
     renderDayEntries(date);
     entrySymbol.focus();
   });
+
+  // ---------- Account switcher (switch / add / rename / delete accounts) ----------
+  const accountSwitcher = document.getElementById("accountSwitcher");
+  const accountSwitcherBtn = document.getElementById("accountSwitcherBtn");
+  const accountSwitcherLabel = document.getElementById("accountSwitcherLabel");
+  const accountDropdown = document.getElementById("accountDropdown");
+  const accountDropdownList = document.getElementById("accountDropdownList");
+  const newAccountName = document.getElementById("newAccountName");
+  const addAccountBtn = document.getElementById("addAccountBtn");
+  let renamingAccountId = null;
+
+  function renderAccountSwitcher(){
+    const accounts = accountsApi.getAccounts();
+    const activeId = accountsApi.getActiveAccountId();
+    const active = accounts.find(a => a.id === activeId) || accounts[0];
+    accountSwitcherLabel.textContent = active ? active.name : "Account";
+
+    accountDropdownList.innerHTML = accounts.map(a => {
+      if(a.id === renamingAccountId){
+        return `<div class="account-row account-row-editing" data-id="${a.id}">
+          <input type="text" class="account-rename-input" id="accountRenameInput" value="${a.name.replace(/"/g,"&quot;")}" maxlength="40">
+        </div>`;
+      }
+      return `<div class="account-row${a.id === activeId ? " active" : ""}" data-id="${a.id}">
+        <button type="button" class="account-row-name" data-id="${a.id}">${a.name}</button>
+        <span class="account-row-actions">
+          <button type="button" class="account-row-btn account-row-rename" data-id="${a.id}" title="Rename" aria-label="Rename ${a.name}">&#9998;</button>
+          ${accounts.length > 1 ? `<button type="button" class="account-row-btn account-row-delete" data-id="${a.id}" title="Delete" aria-label="Delete ${a.name}">&times;</button>` : ""}
+        </span>
+      </div>`;
+    }).join("");
+
+    const input = document.getElementById("accountRenameInput");
+    if(input){
+      input.focus();
+      input.select();
+    }
+  }
+
+  function openAccountDropdown(){
+    renderAccountSwitcher();
+    accountDropdown.hidden = false;
+  }
+  function closeAccountDropdown(){
+    accountDropdown.hidden = true;
+    renamingAccountId = null;
+    newAccountName.value = "";
+  }
+
+  accountSwitcherBtn.addEventListener("click", () => {
+    if(accountDropdown.hidden) openAccountDropdown();
+    else closeAccountDropdown();
+  });
+
+  document.addEventListener("click", e => {
+    // Use composedPath (captured at dispatch time) rather than
+    // accountSwitcher.contains(e.target): row clicks re-render
+    // accountDropdownList's innerHTML synchronously, which detaches the
+    // original target before this bubbles up here, making .contains()
+    // wrongly report "outside" and close the dropdown mid-action.
+    if(!e.composedPath().includes(accountSwitcher)) closeAccountDropdown();
+  });
+
+  function commitRename(id, value){
+    if(value && value.trim()) accountsApi.renameAccount(id, value);
+    renamingAccountId = null;
+    renderAccountSwitcher();
+  }
+
+  accountDropdownList.addEventListener("click", e => {
+    const renameBtn = e.target.closest(".account-row-rename");
+    if(renameBtn){
+      renamingAccountId = renameBtn.dataset.id;
+      renderAccountSwitcher();
+      return;
+    }
+    const deleteBtn = e.target.closest(".account-row-delete");
+    if(deleteBtn){
+      const acc = accountsApi.getAccounts().find(a => a.id === deleteBtn.dataset.id);
+      if(acc && confirm(`Delete "${acc.name}"? Its logged entries will no longer be shown.`)){
+        accountsApi.deleteAccount(deleteBtn.dataset.id);
+        renderAccountSwitcher();
+        render();
+      }
+      return;
+    }
+    const nameBtn = e.target.closest(".account-row-name");
+    if(nameBtn){
+      accountsApi.setActiveAccountId(nameBtn.dataset.id);
+      closeAccountDropdown();
+      render();
+    }
+  });
+
+  accountDropdownList.addEventListener("keydown", e => {
+    if(e.target.id !== "accountRenameInput") return;
+    if(e.key === "Enter") commitRename(renamingAccountId, e.target.value);
+    else if(e.key === "Escape"){ renamingAccountId = null; renderAccountSwitcher(); }
+  });
+  accountDropdownList.addEventListener("focusout", e => {
+    if(e.target.id === "accountRenameInput" && renamingAccountId) commitRename(renamingAccountId, e.target.value);
+  });
+
+  function submitNewAccount(){
+    const name = newAccountName.value;
+    if(!name || !name.trim()) return;
+    accountsApi.addAccount(name);
+    closeAccountDropdown();
+    render();
+  }
+  addAccountBtn.addEventListener("click", submitNewAccount);
+  newAccountName.addEventListener("keydown", e => { if(e.key === "Enter") submitNewAccount(); });
 
   render();
 })();
